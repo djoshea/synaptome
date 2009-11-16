@@ -12,10 +12,16 @@ for c = 1:ds.nch
    ibfeatname{c} = sprintf('IB_%s', cname);
    
    for i = 1:ds.ntrain
-       chdat = ds.sg(i).im(c,5:7,5:7,5:7);
+       chdat = ds.sg(i).im(6,5:7,5:7,5:7) .* ds.sg(i).im(c,5:7,5:7,5:7);
        ibfeat(i,c) = sum(chdat(:));
    end
 end
 
+ds.ftname = ibfeatname;
+ds.ft = ibfeat;
+
+ds.labelcolors = [0 0 0; 1 0 0; 0 0.5 1; 1 1 0];
+
 figure(1), clf;
-gscatter(ibfeat(:,5), ibfeat(:,7), ds.labelnames(ds.trainlabel)', char(ds.labelcolors(ds.trainlabel)'));
+colors = ds.labelcolors(ds.trainlabel,:);
+gscatter(ibfeat(:,5), ibfeat(:,7), ds.labelnames(ds.trainlabel)', colors);
