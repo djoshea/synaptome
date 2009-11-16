@@ -1,0 +1,4 @@
+Cortical synaptic density profiles.
+
+(A) Overall density of glutamatergic and gabaergic synapses as a function of cortical depth from the measurement origin at pia.
+(B) Density of glutamatergic and gabaergic synapses (solid red and blue lines) that lie within 250 nm of the thresholded YFP mask. These densities are not normalized to the volume of the YFP mask at each depth, which is overlaid on the density profile (solid green, arbitrary units). Expected density profiles of glutamatergic and gabaergic synapses (dashed red and blue lines) were computed by multiplying at each depth the overall density of each synapse by the proportion of the volume occupied by the YFP mask.

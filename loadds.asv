@@ -1,0 +1,44 @@
+ds.fnamepivot = 'gordon300/Synapsin.tif.pivots.xls';
+ds.fnamepivot = 'gordon300/Synapsin.tifSubsetObjects.xls';
+ds.classes = {'glut', 'gaba'};
+ds.chlist = {'Bassoon', 'DAPI', 'GAD', 'Gephryn', 'PSD95', 'Synapsin', 'VGat', 'VGlut1', 'VGlut2', 'YFP'};
+ds.labelnames = {'none', 'glut', 'gaba', 'both'};
+ds.showlabels = [2 3];
+ds.showlabelcolors = {'r' 'b'};
+
+indicatorfnames = {'gordon300/glutAllClassified' , ...
+    'gordon300/gabaAllClassified'};
+
+%% Train Pivot List
+disp('Loading Training Pivot List...');
+ds.trainpivots = loadpiv
+
+%% Full Dataset Pivots
+disp('Loading Full Pivot List...');
+
+ds.pivots = loadpivotlist(ds.fnamepivot);
+ds.npivots = length(ds.pivots.x);
+
+disp('Loading Full SVM Labels...');
+
+ds.nc = length(ds.classes);
+
+ds.indic = zeros(ds.npivots, ds.nc);
+for c = 1:ds.nc
+    fid = fopen(ds.indicatorfnames{c});
+    data = textscan(fid, '%d');
+    ds.indic(:,c) = data{1};
+    fclose(fid);
+end
+
+ds.nl = length(ds.labelnames);
+ds.labelids = 0:ds.nl-1;
+ds.label = 1*ds.indic(:,1) + 2*ds.indic(:,2);
+
+ds.nlshow = length(ds.showlabels);
+
+%% Training Dataset
+
+ds.trainpivots = loadpivotlist('
+
+ds.nch = length(ds.chlist);
