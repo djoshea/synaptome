@@ -30,6 +30,16 @@ title(sprintf('%s vs. %s', features{1}, features{2}));
 function callback(src, event)
    
 tag = str2num(get(src,'Tag'));
+x = get(src, 'XData');
+y = get(src, 'YData');
+
+delete(get(gcf, 'UserData'));
+
+hcurrent = plot(x,y, 'Marker', 'o', 'MarkerSize', 10, ...
+    'MarkerFaceColor', 'g', 'MarkerEdgeColor', 'g');
+disp([x y]);
+set(gcf,'UserData', hcurrent);
+
 viewsg(ds,tag, 99);
 
 end

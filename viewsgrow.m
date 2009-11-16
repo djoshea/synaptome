@@ -42,10 +42,17 @@ end
 % fill rowdat (Y, X, C) with bordercol
 rowdat = repmat(reshape(bordercol, [1 1 3]), [2*vspacing + szy, ntiles*(szx+hspacing) + hspacing, 1]);
 
+norm = max([d.R(:); d.G(:); d.B(:)]);
+norm = 100;
 for z = 1:ntiles
     yind = vspacing+1 : vspacing+szy;
     xind = szx*(z-1)+hspacing*z+1 : szx*z+hspacing*z;
-    rowdat(yind, xind, 1) = squeeze(d.R(z,:,:)) / max(d.R(:));
-    rowdat(yind, xind, 2) = squeeze(d.G(z,:,:)) / max(d.G(:));
-    rowdat(yind, xind, 3) = squeeze(d.B(z,:,:)) / max(d.B(:));
+%     rowdat(yind, xind, 1) = squeeze(d.R(z,:,:)) / max(d.R(:));
+%     rowdat(yind, xind, 2) = squeeze(d.G(z,:,:)) / max(d.G(:));
+%     rowdat(yind, xind, 3) = squeeze(d.B(z,:,:)) / max(d.B(:));
+    rowdat(yind, xind, 1) = squeeze(d.R(z,:,:)) / norm;
+    rowdat(yind, xind, 2) = squeeze(d.G(z,:,:)) / norm;
+    rowdat(yind, xind, 3) = squeeze(d.B(z,:,:)) / norm;
 end
+
+rowdat = min(max(rowdat, 0), 1);

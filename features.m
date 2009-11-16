@@ -12,7 +12,7 @@ for c = 1:ds.nch
    ibfeatname{c} = sprintf('IB_%s', cname);
    
    for i = 1:ds.ntrain
-       chdat = ds.sg(i).im(6,5:7,5:7,5:7) .* ds.sg(i).im(c,5:7,5:7,5:7);
+       chdat = min(ds.sg(i).im(6,5:7,5:7,5:7), ds.sg(i).im(c,5:7,5:7,5:7));
        ibfeat(i,c) = sum(chdat(:));
    end
 end
