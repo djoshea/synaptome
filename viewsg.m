@@ -85,7 +85,7 @@ axov2 = axes('Position',get(gca,'Position'),...
    'XColor','k','YColor','k', 'XTick', [], 'TickDir', 'in', ...
    'YTick', yticks, 'YLim', get(axorig, 'YLim'), 'YTickLabel', {});
 
-
+syntable(ds,i);
 
 
 

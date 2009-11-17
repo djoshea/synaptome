@@ -1,31 +1,43 @@
 function synplot(ds, features)
 
 features = {'IB_VGlut1', 'IB_PSD95'};
-
+t = sprintf('%s vs. %s', features{1}, features{2});
 [ft idx] = getfeature(ds, features);
     
 clf; hold on
+set(gcf, 'Position', [244   543   560   420]);
+set(gcf, 'Name', t);
+set(gcf, 'NumberTitle', 'off');
 set(gcf, 'defaulttextinterpreter', 'none');
 
-for ci = 1:ds.nlabels
-    pts = find(ds.trainlabel == ci);
-    
-    for i = 1:length(pts)
-        idx = pts(i);
-        h = line(ft(idx, 1), ft(idx, 2));
-        set(h, 'Marker','.', 'LineStyle', 'none', ...
-         'Color', ds.labelcolors(ci,:), ...
-         'MarkerFaceColor', ds.labelcolors(ci,:), ...
-         'MarkerEdgeColor', ds.labelcolors(ci,:), ...
-         'MarkerSize', 8, ...
-         'ButtonDownFcn', @callback, ...
-         'Tag', num2str(idx));
-    end
+h = zeros(size(ds.labelnames));
+for ci = 1:length(ds.labelnames)
+    h(ci) = line(0, 0, 'Marker', 'o', 'MarkerSize', 8, 'LineStyle', 'none', ...
+        'MarkerFaceColor', ds.labelcolors(ci,:), ...
+        'MarkerEdgeColor', ds.labelcolors(ci,:));
 end
+legend(ds.labelnames, 'Location', 'Best');
+delete(h);
+
+for i = 1:ds.ntrain
+    if(ds.trainlabelconf(i) <= 0.4)
+        continue;
+    end
+    ci = ds.trainlabel(i);
+    h = line(ft(i, 1), ft(i, 2));
+    set(h, 'Marker','o', 'LineStyle', 'none', ...
+     'Color', ds.labelcolors(ci,:), ...
+     'MarkerFaceColor', ds.labelcolors(ci,:), ...
+     'MarkerEdgeColor', ds.labelcolors(ci,:), ...
+     'MarkerSize', 4, ...
+     'ButtonDownFcn', @callback, ...
+     'Tag', num2str(i));
+end
+set(gcf, 'UserData', '');
 
 xlabel(features{1});
 ylabel(features{2});
-title(sprintf('%s vs. %s', features{1}, features{2}));
+title(t);
 
 function callback(src, event)
    
@@ -33,10 +45,13 @@ tag = str2num(get(src,'Tag'));
 x = get(src, 'XData');
 y = get(src, 'YData');
 
-delete(get(gcf, 'UserData'));
+hmark = get(gcf, 'UserData');
+if(~strcmp(hmark, ''))
+    delete(hmark);
+end
 
 hcurrent = plot(x,y, 'Marker', 'o', 'MarkerSize', 10, ...
-    'MarkerFaceColor', 'g', 'MarkerEdgeColor', 'g');
+    'MarkerFaceColor', 'none', 'MarkerEdgeColor', 'g');
 disp([x y]);
 set(gcf,'UserData', hcurrent);
 
