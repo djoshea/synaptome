@@ -4,7 +4,7 @@ function syntable(ds, i)
 ti = sprintf('Data for Synapse %d [ %s ]', i, ds.sg(i).coordstr);
 
 figure(198); clf;
-set(gcf, 'Position', [1661 476 350 400]);
+% set(gcf, 'Position', [1661 476 350 400]);
 set(gcf, 'Name', ti);
 set(gcf, 'NumberTitle', 'off');
 

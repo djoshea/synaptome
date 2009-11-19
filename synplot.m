@@ -5,7 +5,7 @@ t = sprintf('%s vs. %s', features{1}, features{2});
 [ft idx] = getfeature(ds, features);
     
 clf; hold on
-set(gcf, 'Position', [244   543   560   420]);
+% set(gcf, 'Position', [244   543   560   420]);
 set(gcf, 'Name', t);
 set(gcf, 'NumberTitle', 'off');
 set(gcf, 'defaulttextinterpreter', 'none');

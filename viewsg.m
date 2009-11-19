@@ -25,7 +25,7 @@ for c = 1:ds.nch
 end
 
 figure(fignum), clf;
-set(gcf, 'Position', [827   476   817   669]);
+% set(gcf, 'Position', [827   476   817   669]);
 set(gcf, 'Name', t);
 set(gcf, 'NumberTitle', 'off');
 set(gcf, 'Color', [0 0 0]);
