@@ -1,6 +1,8 @@
 function synplot(ds, features)
 
-features = {'IB_VGlut1', 'IB_PSD95'};
+if(~exist('features', 'var'))
+    features = {'IB_VGlut1', 'IB_PSD95'};
+end
 t = sprintf('%s vs. %s', features{1}, features{2});
 [ft idx] = getfeature(ds, features);
     
@@ -52,7 +54,6 @@ end
 
 hcurrent = plot(x,y, 'Marker', 'o', 'MarkerSize', 10, ...
     'MarkerFaceColor', 'none', 'MarkerEdgeColor', 'g');
-disp([x y]);
 set(gcf,'UserData', hcurrent);
 
 viewsg(ds,tag, 99);

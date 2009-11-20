@@ -56,3 +56,11 @@ for z = 1:ntiles
 end
 
 rowdat = min(max(rowdat, 0), 1);
+
+if(nargout == 0)
+    figure;
+    sh = rowdat - min(rowdat(:));
+    sh = sh / max(sh(:));
+    imagesc(sh);
+end
+    

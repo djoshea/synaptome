@@ -2,13 +2,13 @@ function viewsg(ds, i, fignum)
 % VIEWSG(ds, i, fignum) - View the ith synaptogram in Figure fignums
 
 if(~isfield(ds,'sg'))
-    sg = loadsg(ds, i);
+    sg = loadsg(ds, i); % original 11^3 box of pixel values and some info
 else
     sg = ds.sg(i);
 end
 
 if(~exist('fignum', 'var'))
-    fignum = gcf;
+    fignum = 199;
 end
 
 % title
@@ -17,11 +17,19 @@ t =  sprintf('Synaptogram for Synapse %d [ %s ]', i, sg.coordstr);
 vspacing = 1;
 im = [];
 
-for c = 1:ds.nch
-    row = viewsgrow(sg.im(c,:,:,:), [0 0 0], vspacing);
+for r = 1:length(ds.vis);
+    rname = ds.vis{r};
+    if(ischar(rname))
+        dat = getchannel(ds,rname, i);
+    else
+        dat = [];
+        dat.R = getchannel(ds,rname{1}, i);
+        dat.G = getchannel(ds,rname{2}, i);
+        dat.B = getchannel(ds,rname{3}, i);
+    end
+    row = viewsgrow(dat, [0 0 0], vspacing);
     sz = size(row);
     im = [im; row];
-    
 end
 
 figure(fignum), clf;
@@ -31,6 +39,8 @@ set(gcf, 'NumberTitle', 'off');
 set(gcf, 'Color', [0 0 0]);
 
 imagesc(max(im,0));
+set(gca,'Units', 'normalized');
+set(gca,'Position', [0.15 0.08 0.7 0.84]);
 yticks = vspacing + ds.sgdim(2)/2 + 1 : ds.sgdim(2) + 2*vspacing : sz(2);
 set(gca, 'YColor', 'k');
 axorig = gca;
@@ -53,12 +63,12 @@ ax2 = axes('Position',get(gca,'Position'),...
 % left channel labels
 set(ax1, 'YLim', get(axorig, 'YLim'));      
 set(ax1, 'YTick', yticks);
-set(ax1, 'YTickLabel', fliplr(ds.chlist));
+set(ax1, 'YTickLabel', fliplr(ds.visname));
 
 % right channel labels
 set(ax2, 'YLim', get(axorig, 'YLim'));
 set(ax2, 'YTick', yticks);
-set(ax2, 'YTickLabel', fliplr(ds.chlist));
+set(ax2, 'YTickLabel', fliplr(ds.visname));
 
 sectlabels = -floor(ds.sgdim(3)/2):floor(ds.sgdim(3)/2);
 
