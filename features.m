@@ -13,11 +13,9 @@ for i = 1:length(ds.chlist)
     ds = addchannel(ds, getchannel(ds, chname), chname);
 end
 
-
-
 % active brightness filtering
 ftophat = struct('type', 'tophat', 'se', strel('disk',2));
-frestrict = struct('type', 'maskball', 'radius', 300);
+frestrict = struct('type', 'maskball', 'radius', 150);
 fmax = struct('type', 'globalmax');
 fab = struct('type', 'maskball', 'radius', 200);
 
@@ -94,16 +92,26 @@ gabadat = getfeature(ds,{'Gephyrin_iab','VGat_iab', 'GAD_iab'});
 gabadat = gabadat - repmat(min(gabadat,[],1),[ds.ntrain 1]);
 gabadat = gabadat ./ repmat(max(gabadat,[],1),[ds.ntrain 1]);
 
+ds = addfeature(ds, sqrt(sum(glutdat(:,2:3).^2,2)), 'Glut_L2pre');
+ds = addfeature(ds, sqrt(sum(gabadat(:,2:3).^2,2)), 'GABA_L2pre');
+
+
 ds = addfeature(ds, min([glutdat(:,1) sqrt(sum(glutdat(:,2:3).^2,2))], [], 2), 'Glut_L2prepost');
 ds = addfeature(ds, min([gabadat(:,1) sqrt(sum(gabadat(:,2:3).^2,2))], [], 2), 'GABA_L2prepost');
 
+
 % which training examples to actually plot and test on
 ds.trainactive = ds.trainlabelconf > 0.4;
+% ds.trainactive = ds.trainactive & ds.trainlabel ~= 1 & ds.trainlabel ~= 4;
 
 %% Test CV error
 testft;
 
 %% Plot a 2D separability scatter plot
 figure(1), clf;
-feat = {'Glut_L2prepost', 'GABA_L2prepost'};
+feat = {'GABA_L2pre', 'Gephyrin_iab'};
+synplot(ds, feat);
+
+figure(2), clf;
+feat = {'Glut_L2pre', 'PSD95_iab'};
 synplot(ds, feat);
