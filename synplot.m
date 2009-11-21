@@ -22,7 +22,7 @@ legend(ds.labelnames, 'Location', 'Best');
 delete(h);
 
 for i = 1:ds.ntrain
-    if(ds.trainlabelconf(i) <= 0.4)
+    if(~ds.trainactive(i))
         continue;
     end
     ci = ds.trainlabel(i);

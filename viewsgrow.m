@@ -42,8 +42,8 @@ end
 % fill rowdat (Y, X, C) with bordercol
 rowdat = repmat(reshape(bordercol, [1 1 3]), [2*vspacing + szy, ntiles*(szx+hspacing) + hspacing, 1]);
 
+% should be 1 if channels are normalized;
 norm = max([d.R(:); d.G(:); d.B(:)]);
-norm = 100;
 for z = 1:ntiles
     yind = vspacing+1 : vspacing+szy;
     xind = szx*(z-1)+hspacing*z+1 : szx*z+hspacing*z;

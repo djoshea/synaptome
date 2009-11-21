@@ -6,9 +6,12 @@ function dat = getchannel(ds, dname, syn)
 if(~strcmp(dname, ''))
     chidx = find(strcmp(ds.trdlist, dname));
     if(numel(chidx) == 0)
-        error(sprintf('Could not find channel "%s"', dname));
+        % couldn't find in trdlist, check im channels?
+        dat = getimchannel(ds, dname);
+%         error(sprintf('Could not find channel "%s"', dname));
+    else
+        dat = squeeze(ds.trd(chidx,:,:,:,:));
     end
-    dat = squeeze(ds.trd(chidx,:,:,:,:));
 else
     % fill with zeros if '' is specified for the name
     dat = zeros([ds.ntrain ds.sgdim]);
@@ -16,7 +19,7 @@ end
  
 % grab a specific synapse if requested    
 if(exist('syn', 'var'))
-    dat = dat(syn,:,:,:);
+    dat = squeeze(dat(syn,:,:,:));
 end
 
 
