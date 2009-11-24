@@ -13,15 +13,49 @@ for i = 1:length(ds.chlist)
     ds = addchannel(ds, getchannel(ds, chname), chname);
 end
 
-% active brightness filtering
+
+% top hat filter synapsin
 ftophat = struct('type', 'tophat', 'se', strel('disk',2));
-frestrict = struct('type', 'maskball', 'radius', 150);
+ds = addchannel(ds, filtdat(ds, 'Synapsin', ftophat), 'Synapsin_th');
+
+% then find maxima in 5x5x5 neighborhoods
+fmaxwind3 = struct('type', 'maxwind3', 'pxradius', 5, 'thresh', 0.05);
+ds = addchannel(ds, filtdat(ds, 'Synapsin_th', fmaxwind3), 'Synapsin_mw3');
+
+% construct a voronoi region around the central-most synapsin puncta
+% store central synapsin puncta coords in info.center
+% this mask avoids other synapsin puncta
+fvormask = struct('type', 'vormask', 'biasfactor', 1);
+[vormask info] = filtdat(ds, 'Synapsin_mw3', fvormask);
+fvormask = struct('type', 'mask', 'mask', vormask);
+
+% ball restriction mask around central synapsin puncta, further restricts
+% voronoi mask that avoids other synapsin puncta
+frestrictpre = struct('type', 'maskball', 'radius', 150, 'center', info.center);
+frestrictpost = struct('type', 'maskball', 'radius', 200, 'center', info.center);
+
+% Final masks for pre and post, ball restricted and voronoi restricted
+maskpre = filtdat(ds, vormask, frestrictpre);
+fmaskpre = struct('type', 'mask', 'mask', maskpre);
+maskpost = filtdat(ds, vormask, frestrictpost);
+fmaskpost = struct('type', 'mask', 'mask', maskpost);
+
+% to show final masks over synapsin channel
+ds = addchannel(ds, filtdat(ds, 'Synapsin', fmaskpre), 'Synapsin_maskpre');
+ds = addchannel(ds, filtdat(ds, 'Synapsin', fmaskpost), 'Synapsin_maskpost');
+
+% global max for brightest puncta find
 fmax = struct('type', 'globalmax');
-fab = struct('type', 'maskball', 'radius', 200);
+% small ball around global max to pass only active brightness zone
+fab = struct('type', 'maskball', 'radius', 100);
 
-ds = addchannel(ds, filtdat(ds, 'Synapsin', frestrict), 'Synapsin_rs');
-
-ablist = {'VGlut1','VGlut2', 'PSD95', 'VGat', 'GAD', 'Gephyrin'};
+% active brightness filtering: 
+% search for brightest point (fmask) within masked region (fmaskpre or fmaskpost)
+% pass only a small ball (fab) around the brightest point
+% later this active brightness zone will be integrated to form the _iab features
+ablistpre = {'Bassoon','VGlut1','VGlut2','VGat', 'GAD'};
+ablistpost = { 'PSD95', 'Gephyrin' };
+ablist = [ablistpre ablistpost];
 
 for c = 1:length(ablist)
     cname = ablist{c};
@@ -29,7 +63,11 @@ for c = 1:length(ablist)
     cname_ab = sprintf('%s_ab',cname);
     
     ds = addchannel(ds, filtdat(ds, cname, ftophat), cname_th);
-    restricted = filtdat(ds, cname_th, frestrict);
+    if(nnz(strcmp(ablistpre, cname))) % use pre or post synaptic search restriction mask?
+        restricted = filtdat(ds, cname_th, fmaskpre);
+    else
+        restricted = filtdat(ds, cname_th, fmaskpost);
+    end
     [filt info] = filtdat(ds, restricted, fmax);
     fab.center = info.center;
     ds = addchannel(ds, filtdat(ds, cname_th, fab), cname_ab);
@@ -39,17 +77,17 @@ end
 % this involves creating a cell array with one element for each row
 % each row consists of 1 or 3 channel names that index into ds.ch
 % 1 name implies grayscale, 3 names are used as RGB channels
-
 ds.vis = {};
 ds.visname = {};
 
-vis = { 'Synapsin', 'Bassoon', ...
-    'VGlut1', {'Synapsin_rs','VGlut1_ab'}, ...
-    'VGlut2', {'Synapsin_rs', 'VGlut2_ab'}, ...
-    'PSD95', {'Synapsin_rs', 'PSD95_ab'}, ...
-    'VGat', {'Synapsin_rs','VGat_ab'}, ...
-    'GAD', 'GAD_ab', {'Synapsin_rs', 'GAD_ab'}, ...
-    'Gephyrin', {'Synapsin_rs', 'Gephyrin_ab'}, ...
+vis = { 'Synapsin', 'Synapsin_mw3', 'Synapsin_maskpre', 'Synapsin_maskpost', ...
+       'Bassoon', ...
+    'VGlut1', {'Synapsin_maskpre','VGlut1_ab'}, ...
+    'VGlut2', {'Synapsin_maskpre', 'VGlut2_ab'}, ...
+    'PSD95', {'Synapsin_maskpost', '', 'PSD95_ab'}, ...
+    'VGat', {'Synapsin_maskpre','VGat_ab'}, ...
+    'GAD', {'Synapsin_maskpre', 'GAD_ab'}, ...
+    'Gephyrin', {'Synapsin_maskpost', '', 'Gephyrin_ab'}, ...
     };
 
 for i = 1:length(vis)
