@@ -13,14 +13,13 @@ for i = 1:length(ds.chlist)
     ds = addchannel(ds, getchannel(ds, chname), chname);
 end
 
-
 % top hat filter synapsin
-ftophat = struct('type', 'tophat', 'se', strel('disk',2));
+ftophat = struct('type', 'tophat', 'se', strel('disk',1));
 ds = addchannel(ds, filtdat(ds, 'Synapsin', ftophat), 'Synapsin_th');
 
 % then find maxima in 5x5x5 neighborhoods
 fmaxwind3 = struct('type', 'maxwind3', 'pxradius', 5, 'thresh', 0.05);
-ds = addchannel(ds, filtdat(ds, 'Synapsin_th', fmaxwind3), 'Synapsin_mw3');
+ds = addchannel(ds, filtdat(ds, 'Synapsin', fmaxwind3), 'Synapsin_mw3');
 
 % construct a voronoi region around the central-most synapsin puncta
 % store central synapsin puncta coords in info.center
@@ -98,7 +97,7 @@ ds.ft = [];
 ds.ftname = {};
 
 % integrated brightness features
-for c = 1:ds.nch
+for c = 1:ds.nimch
    cname = ds.chlist{c};
    name = sprintf('%s_ib', cname);
    dat = zeros(ds.ntrain,1);
@@ -133,7 +132,6 @@ gabadat = gabadat ./ repmat(max(gabadat,[],1),[ds.ntrain 1]);
 ds = addfeature(ds, sqrt(sum(glutdat(:,2:3).^2,2)), 'Glut_L2pre');
 ds = addfeature(ds, sqrt(sum(gabadat(:,2:3).^2,2)), 'GABA_L2pre');
 
-
 ds = addfeature(ds, min([glutdat(:,1) sqrt(sum(glutdat(:,2:3).^2,2))], [], 2), 'Glut_L2prepost');
 ds = addfeature(ds, min([gabadat(:,1) sqrt(sum(gabadat(:,2:3).^2,2))], [], 2), 'GABA_L2prepost');
 
@@ -143,7 +141,7 @@ ds.trainactive = ds.trainlabelconf > 0.4;
 % ds.trainactive = ds.trainactive & ds.trainlabel ~= 1 & ds.trainlabel ~= 4;
 
 %% Test CV error
-testft;
+% testft;
 
 %% Plot a 2D separability scatter plot
 figure(1), clf;

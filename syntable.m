@@ -1,7 +1,7 @@
 function syntable(ds, i)
 
 % data table figure with synapse features
-ti = sprintf('Data for Synapse %d [ %s ]', i, ds.sg(i).coordstr);
+ti = sprintf('Data for Synapse %d [ %s ]', i, ds.sg(i).str);
 
 figure(198); clf;
 % set(gcf, 'Position', [1661 476 350 400]);

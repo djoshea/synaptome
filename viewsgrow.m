@@ -1,7 +1,11 @@
 function rowdat = viewsgrow(dat, bordercol, vspacing, hspacing)
 % dat given in (z,y,x) coords, or specify dat.R .G .B separately
 
-if(~isstruct(dat)) % just data, make into matrix
+if(ndims(dat) == 4) 
+    d.R = dat(:,:,:,1);
+    d.G = dat(:,:,:,2);
+    d.B = dat(:,:,:,3);
+elseif(~isstruct(dat)) % just data, make into matrix
     d.R = squeeze(dat);
     d.G = squeeze(dat);
     d.B = squeeze(dat);

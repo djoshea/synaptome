@@ -12,7 +12,7 @@ if(~exist('fignum', 'var'))
 end
 
 % title
-t =  sprintf('Synaptogram for Synapse %d [ %s ]', i, sg.coordstr);
+t =  sprintf('Synaptogram for Synapse %d [ %s ]', i, sg.str);
 
 vspacing = 1;
 im = [];
