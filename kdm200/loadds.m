@@ -75,8 +75,8 @@ for i = 1:ds.ntrain
         end
         
         % for some reason, central pixel at 6, 6, 6 is set to 255
-        % reset it to the neighborhood average for now
-        sg.im(c,6,6,6) = mean(reshape(sg.im(c,6,5:7, 5:7), 1, []));
+        % reset it to the 3x3 neighborhood average (excluding me) for now
+        sg.im(c,6,6,6) = mean(reshape(sg.im(c,6,[5 5 5 6 6 7 7 7], [5 6 7 5 7 5 6 7]), 1, []));
     end
     ds.sg{i} = sg;
 end

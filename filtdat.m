@@ -101,35 +101,60 @@ if(strcmp(params.type, 'tophat'))
     return;
 end
 
-% Maxima
-if(strcmp(params.type, 'regmax'))    
-    filt = zeros([ds.ntrain ds.sgdim]);
-    for s = 1:ds.ntrain    
-        % filter each synapse independently
-        % shift dim goes from ZYX indexing to YXZ indexing and back
-        sh = shiftdim(squeeze(orig(s,:,:,:)),1);
-        filt(s,:,:,:) = shiftdim(imregionalmax(sh), 2);
-    end
-    return;
-end
-
-% h-Maxima
-if(strcmp(params.type, 'hmax'))    
-    if(isfield(params, 'h'))
-        h = params.h;
+% Maxima that exceed threshold (auto determined by graythresh or
+% params.thresh) that are far enough away to not be fused by opening with
+% a se (params.se or cube of size 3x3x3, i.e. unique within 5x5x5
+% neighborhood)
+if(strcmp(params.type, 'maxseed'))
+    if(~isfield(params,'thresh'))
+        threshauto = 1;
     else
-        h = 0.2;
+        threshauto = 0;
+    end
+    if(~isfield(params, 'se'))
+        se = strel('arbitrary', ones(3,3,3));
+    else
+        se = params.se;
     end
     
     filt = zeros([ds.ntrain ds.sgdim]);
     for s = 1:ds.ntrain    
-        % filter each synapse independently
-        % shift dim goes from ZYX indexing to YXZ indexing and back
-        sh = shiftdim(squeeze(orig(s,:,:,:)),1);
-        filt(s,:,:,:) = shiftdim(imhmax(sh,h), 2);
+       syn = squeeze(orig(s,:,:,:));
+       if(threshauto)
+           thresh = graythresh(syn);
+       else
+           thresh = params.thresh;
+       end
+       seeds = imregionalmax(syn) .* (syn > thresh);
+       dil = imdilate(seeds, se);
+       prop = regionprops(bwlabeln(dil),seeds,'WeightedCentroid');
+       centroid = round(cat(1,prop.WeightedCentroid));
+       inds = sub2ind(ds.sgdim, centroid(:,2), centroid(:,1), centroid(:,3));
+       
+       centroids = zeros(ds.sgdim);
+       centroids(inds) = 1;
+       filt(s,:,:,:) = centroids;
     end
     return;
 end
+
+% % h-Maxima
+% if(strcmp(params.type, 'hmax'))    
+%     if(isfield(params, 'h'))
+%         h = params.h;
+%     else
+%         h = 0.2;
+%     end
+%     
+%     filt = zeros([ds.ntrain ds.sgdim]);
+%     for s = 1:ds.ntrain    
+%         % filter each synapse independently
+%         % shift dim goes from ZYX indexing to YXZ indexing and back
+%         sh = shiftdim(squeeze(orig(s,:,:,:)),1);
+%         filt(s,:,:,:) = shiftdim(imhmax(sh,h), 2);
+%     end
+%     return;
+% end
 
 % brightest point - preserves brightest point's value in filt, returns
 % point coord in info.center array of Nx3 (ZYX coord for each syn)
@@ -276,6 +301,132 @@ if(strcmp(params.type, 'watershedmask'))
     return;
 end
 
+% Watershed label: return label matrix marking each catchment basin 
+% params.markers is ds.ntrain x ds.sgdim binary array with markers at the 
+% maxima to watershed from. 
+% input channel is the grayscale channel to watershed upon.
+if(strcmp(params.type, 'watershedlabel'))
+    % find pivot closest to center
+    if(~isfield(params, 'center'))
+        center = repmat(ds.sgdim/2 + 1/2, [ds.ntrain 1]); % choose center of volume
+    else
+        if(ndims(params.center) == 1) % clone by ntrain
+            center = repmat(params.center, [ds.ntrain 1]);
+        else
+            center = params.center;
+        end
+    end
+    
+    if(~isfield(params, 'markers'))
+        error('Must specify markers in params.markers array');
+    end
+ 
+    % for storing coords of pivot closest to centroid
+    info.centermarker = zeros(ds.ntrain, length(ds.sgdim));
+    filt = zeros([ds.ntrain ds.sgdim]);
+    for s = 1:ds.ntrain
+        slice = squeeze(orig(s,:,:,:));
+        markerslice = squeeze(params.markers(s,:,:,:) > 0);
+        
+        % compute marker closest to center and distance to center
+        dmask = distmask(center(s,:));
+        mm = (2*max(dmask(:)) - dmask) .* markerslice;
+        [val ind] = max(mm(:));
+        [z y x] = ind2sub(ds.sgdim, ind);
+        info.centermarker(s,:) = [z y x];
+        info.distcentermarker(s,:) = dmask(z,y,x);
+        
+        sliceinv = -slice + max(slice(:));
+        sliceimposed = imimposemin(sliceinv, markerslice);
+        % supersample to thin boundary between catchment basins (to no
+        % width)
+%         N = 3;
+%         indZ = 1:ds.sgdim(1);
+%         indZ = reshape(indZ(ones(N,1),:),1,[]);
+%         indY = 1:ds.sgdim(2);
+%         indY = reshape(indY(ones(N,1),:),1,[]);
+%         indX = 1:ds.sgdim(3);
+%         indX = reshape(indX(ones(N,1),:),1,[]);
+%         [Z Y X] = meshgrid(indZ,indY,indX);
+%         slicebig = sliceimposed(sub2ind(ds.sgdim,Z,Y,X));
+%         
+%         wshed = watershed(slicebig);
+%         L = wshed(ceil(N/2):N:end, ceil(N/2):N:end, ceil(N/2):N:end);
+        L = watershed(sliceimposed);
+        [D Ind] = bwdist(L>0);
+        centerlabel = L(z,y,x);
+        
+        % assign label = 1 to region closest to synapsin, swap with other
+        % label
+        L = L(Ind);
+        Lcopy = L;
+        L(Lcopy == centerlabel) = 1; 
+        L(Lcopy == 1) = centerlabel;
+        info.centerlabel = 1;
+        
+        filt(s,:,:,:) = L;
+    end
 
+    return;
+end
+
+% Color a grayscale channel in regions marked by params.label matrix
+% specify NumLabels (excluding 0) x 3 RGB colormap in params.cmap, default is hsv(NumLabels)
+% with 1 1 1 (original grayscale) for label=0
+% filt is ds.ntrain x ds.sgdim x 3 (5-D)
+if(strcmp(params.type, 'labeloverlay'))
+    if(~isfield(params, 'label'))
+        error('Must specify label matrix in params.label');
+    else
+        L = params.label;
+    end
+    
+    filt = repmat(orig,[ones(1,ndims(orig)) 3]);
+    for s=1:ds.ntrain
+        NL = max(L(s,:)); % number 
+        if(~isfield(params, 'cmap'))
+            cmap = jet(NL);
+        elseif(strcmp(params.cmap, 'function_handle'))
+            cmap = [0 0 0; params.cmap(NL)];
+        else
+            cmap = params.cmap;
+            if(max(cmap(:)) < NL)
+                error('Not enough colors in colormap');
+            end
+        end
+        
+        cmap = cmap(randperm(NL),:);
+        
+        for z = 1:ds.sgdim(1) % loop over 2D images to be able to use built-ins
+            slice = squeeze(orig(s,z,:,:)); % 2D xy image
+            Lslice = squeeze(L(s,z,:,:));
+            
+            % scale the brightness value by the original image grayscale
+            % keep the hue and saturation the same as in cmap
+            cslicehsv = rgb2hsv(label2rgb(Lslice,cmap,[1 1 1]));
+            cslicehsv(:,:,3) = cslicehsv(:,:,3) .* slice;
+            filt(s,z,:,:,:) = hsv2rgb(cslicehsv);
+        end
+    end
+    return;
+end
+
+% extended maxima (regional maxima of hmaxima transform)
+% then dilates then erodes with 2x2x2 cube to link adjacent maxima
+if(strcmp(params.type, 'hmax'))
+    if(isfield(params, 'h'))
+        h = params.h;
+    else
+        error('Must specify params.h');
+    end
+    
+    se = strel('arbitrary', ones(2,2,2));
+    filt = zeros(size(orig));
+    for s= 1:ds.ntrain
+        allmax = imextendedmax(squeeze(orig(s,:,:,:)), h);
+        filt(s,:,:,:) = imerode(imdilate(allmax,se),se);
+    end
+    return;
+end
 
 error(sprintf('Filter "%s" not implemented', params.type));

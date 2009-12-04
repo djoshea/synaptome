@@ -5,7 +5,8 @@ function chdat = getimchannel(ds, chname)
 chdat = zeros([ds.ntrain ds.sgdim]);
 chidx = find(strcmp(ds.chlist, chname));
 if(numel(chidx) == 0)
-    error(sprintf('Could not find channel "%s"', chname));
+    chdat = NaN;
+    return;
 end
 
 for i = 1:ds.ntrain

@@ -66,5 +66,6 @@ if(nargout == 0)
     sh = rowdat - min(rowdat(:));
     sh = sh / max(sh(:));
     imagesc(sh);
+%     axis equal;
 end
     
