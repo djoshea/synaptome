@@ -54,7 +54,17 @@ for i = 1:ds.ntrain
             ds.votesbylabel(i,ds.trainlabelrunnerup(i))) / ds.nvotes;
     end
 end
- 
+
+% adjustments to votes
+ds.trainlabel(168) = 4;
+ds.trainlabel(81) = 4;
+ds.trainlabel(68) = 3;
+ds.trainlabel(71) = 3;
+ds.trainlabel(62) = 2;
+ds.trainlabel(120) = 5;
+ds.trainlabel(28) = 1;
+
+
 disp('Loading Training Synaptogram Data...');
 sgdir = 'U:\Brad\KDM 090416b\Decision tree experiment\puncta';
 
@@ -76,7 +86,10 @@ for i = 1:ds.ntrain
         
         % for some reason, central pixel at 6, 6, 6 is set to 255
         % reset it to the 3x3 neighborhood average (excluding me) for now
-        sg.im(c,6,6,6) = mean(reshape(sg.im(c,6,[5 5 5 6 6 7 7 7], [5 6 7 5 7 5 6 7]), 1, []));
+        nhood = squeeze(sg.im(c,5:7,5:7,5:7));
+        nhood(2,2,2) = Inf;
+        nhood = nhood(nhood ~= Inf);
+        sg.im(c,6,6,6) = mean(nhood);
     end
     ds.sg{i} = sg;
 end
@@ -91,3 +104,4 @@ for i = 1:ds.ntrain
     st(i).str = ds.sg{i}.str;
 end
 ds.sg = st;
+

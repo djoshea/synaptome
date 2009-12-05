@@ -381,21 +381,24 @@ if(strcmp(params.type, 'labeloverlay'))
         L = params.label;
     end
     
+    info.cmap = cell(0);
     filt = repmat(orig,[ones(1,ndims(orig)) 3]);
     for s=1:ds.ntrain
         NL = max(L(s,:)); % number 
         if(~isfield(params, 'cmap'))
             cmap = jet(NL);
+            cmap = cmap(randperm(NL),:);
         elseif(strcmp(params.cmap, 'function_handle'))
-            cmap = [0 0 0; params.cmap(NL)];
+            cmap = params.cmap(NL);
+            cmap = cmap(randperm(NL),:);
         else
-            cmap = params.cmap;
-            if(max(cmap(:)) < NL)
+            cmap = params.cmap{s};
+            if(size(cmap,1) < NL)
                 error('Not enough colors in colormap');
             end
         end
         
-        cmap = cmap(randperm(NL),:);
+        info.cmap{s} = cmap;
         
         for z = 1:ds.sgdim(1) % loop over 2D images to be able to use built-ins
             slice = squeeze(orig(s,z,:,:)); % 2D xy image
@@ -429,4 +432,33 @@ if(strcmp(params.type, 'hmax'))
     return;
 end
 
+% Assign: Takes original channel and params.sourceRegions label matrix, computes the
+% weighted centroid of each connected component (puncta), samples the 
+% params.targetRegions label matrix to compute the region to which each centroid
+% belongs, and relabels the original channel with the label ids of the
+% params.regions matrix to which each blob's centroid belongs
+if(strcmp(params.type, 'assign'))
+    if(~isfield(params,'sourceRegions'))
+        error('Must specify params.sourceRegions label matrix');
+    end
+    if(~isfield(params,'targetRegions'))
+        error('Must specify params.targetRegions label matrix');
+    end
+    
+    filt = zeros([ds.ntrain ds.sgdim]);
+    for s=1:ds.ntrain
+        sourceSlice = squeeze(params.sourceRegions(s,:,:,:));
+        targetSlice = squeeze(params.targetRegions(s,:,:,:));
+        props = regionprops(sourceSlice, squeeze(orig(s,:,:,:)), 'WeightedCentroid');
+        centroids = round(cat(1, props.WeightedCentroid));
+        % grab the target label id for each source label id
+        Lcentroids = targetSlice(sub2ind(ds.sgdim, centroids(:,2), centroids(:,1), centroids(:,3)));
+        filtslice = zeros(ds.sgdim);
+        for val = 1:size(centroids, 1) % replace each instance of val in source slice with the target centroid value
+           filtslice(sourceSlice == val) = Lcentroids(val);
+        end
+        filt(s,:,:,:) = filtslice;
+    end
+    return
+end
 error(sprintf('Filter "%s" not implemented', params.type));

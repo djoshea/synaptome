@@ -32,43 +32,54 @@ ds = addchannel(ds, filtdat(ds, 'Synapsin_th', fmaxseed), 'Synapsin_max');
 fprintf('WaterLabel ');
 fwaterlabel = struct('type', 'watershedlabel', 'markers', getchannel(ds,'Synapsin_max'));
 [labels info] = filtdat(ds, 'Synapsin_th', fwaterlabel);
+ds = addchannel(ds, labels, 'Synapsin_labels',0); % don't normalize
+synapsin_label = info.centerlabel; % label id of synapsin (useful for assignment later)
+
+% watermask is the region where centroids get assigned to this puncta
+% (later constrained by a ball as well)
 watermask = (labels == info.centerlabel);
-fwatermask = struct('type', 'mask', 'mask', watermask);
 synapsin_cent = info.centermarker;
 synapsin_dist = info.distcentermarker;
 
+% restrictpre/post is the region where pre and post centroids must lie to
+% be counted as mine
+waterpre = imdilate(watermask, strel('arbitrary', ones(2,2,2)));
+waterpost = imdilate(watermask, strel('arbitrary', ones(2,2,2)));
+synapsin_restrictpre = filtdat(ds, waterpre, struct('type', 'maskball', 'radius', 200, 'center', synapsin_cent));
+synapsin_restrictpost = filtdat(ds, waterpost, struct('type', 'maskball', 'radius', 300, 'center', synapsin_cent));
+ds = addchannel(ds, synapsin_restrictpre, 'Synapsin_premask');
+ds = addchannel(ds, synapsin_restrictpost, 'Synapsin_postmask');
+
 fprintf('Overlay ');
 flabeloverlay = struct('type', 'labeloverlay', 'label', labels);
-overlay = filtdat(ds, 'Synapsin_th', flabeloverlay);
+[overlay info]= filtdat(ds, 'Synapsin_th', flabeloverlay);
+synapsin_cmap = info.cmap;
+flabeloverlay.cmap = synapsin_cmap;
 ds = addcolorchannel(ds, overlay, 'Synapsin_puncta');
 
 ds = addcolorchannel(ds, filtdat(ds,'Synapsin_max', flabeloverlay), 'Synapsin_maxL');
-
 ds = addcolorchannel(ds, filtdat(ds, 0.3*(~getchannel(ds,'')), flabeloverlay), 'WaterSeg');
 
-% ball restriction mask around central synapsin puncta, further restricts
-% voronoi mask that avoids other synapsin puncta
-frestrictpre = struct('type', 'maskball', 'radius', 250, 'center', synapsin_cent);
-frestrictpost = struct('type', 'maskball', 'radius', 400, 'center', synapsin_cent);
-
 % Final masks for pre and post, ball restricted and voronoi restricted
-fprintf('MaskPre/Post ');
-maskpre = filtdat(ds, watermask, frestrictpre);
-fmaskpre = struct('type', 'mask', 'mask', maskpre);
-maskpost = filtdat(ds, watermask, frestrictpost);
-fmaskpost = struct('type', 'mask', 'mask', maskpost);
+% fprintf('MaskPre/Post ');
+% maskpre = filtdat(ds, watermask, frestrictpre);
+% fmaskpre = struct('type', 'mask', 'mask', maskpre);
+% maskpost = filtdat(ds, watermask, frestrictpost);
+% fmaskpost = struct('type', 'mask', 'mask', maskpost);
+% fmaskpre = fwatermask;
+% fmaskpost = fwatermask;
 
 % to show final masks over synapsin channel
 ds = addchannel(ds, watermask, 'Synapsin_watermask');
-ds = addchannel(ds, filtdat(ds, 'Synapsin', fmaskpre), 'Synapsin_maskpre');
-ds = addchannel(ds, filtdat(ds, 'Synapsin', fmaskpost), 'Synapsin_maskpost');
+% ds = addchannel(ds, filtdat(ds, 'Synapsin', fmaskpre), 'Synapsin_maskpre');
+% ds = addchannel(ds, filtdat(ds, 'Synapsin', fmaskpost), 'Synapsin_maskpost');
 
 fprintf('\n');
-
-% global max for brightest puncta find
-fmax = struct('type', 'globalmax');
-% small ball around global max to pass only active brightness zone
-fab = struct('type', 'maskball', 'radius', 200);
+% 
+% % global max for brightest puncta find
+% fmax = struct('type', 'globalmax');
+% % small ball around global max to pass only active brightness zone
+% fab = struct('type', 'maskball', 'radius', 200);
 
 % active brightness filtering: 
 % search for brightest point (fmask) within masked region (fmaskpre or fmaskpost)
@@ -90,9 +101,11 @@ for c = 1:length(ablist)
     cname_th = sprintf('%s_th',cname);
     cname_ab = sprintf('%s_ab',cname);
     cname_puncta = sprintf('%s_puncta', cname);
+    cname_assigned = sprintf('%s_assign', cname);
     
     fprintf('TopHat ');
     ds = addchannel(ds, filtdat(ds, cname, ftophat), cname_th);
+%     ds = addchannel(ds, getchannel(ds,cname), cname_th);
     
     % find all maxima using neighborhood maxima
     fprintf('MaxSeed ');
@@ -102,31 +115,59 @@ for c = 1:length(ablist)
     fprintf('WaterLabel ');
     fwaterlabel = struct('type', 'watershedlabel', 'markers', maxima);
     labels = filtdat(ds, cname_th, fwaterlabel);
-    fprintf('Overlay ');
-    flabeloverlay = struct('type', 'labeloverlay', 'label', labels);
-    overlay = filtdat(ds, cname_th, flabeloverlay);
-    ds = addcolorchannel(ds, overlay, cname_puncta);
+    
+    fprintf('PunctaOverlay '); % visualize each puncta as separate color
+    foverlay = struct('type', 'labeloverlay', 'label', labels);
+    ds = addcolorchannel(ds, filtdat(ds, cname_th, foverlay), cname_puncta);
+    
+    % assign each cname puncta to the nearest synapsin puncta by the watershed
+    % basin id of each cname puncta's weighted centroid location
+%     fprintf('PunctaAssign ');
+%     fassign = struct('type', 'assign', 'sourceRegions', labels, ...
+%         'targetRegions', synapsin_watermask);
+%     assign = filtdat(ds, cname_th, fassign);
+%     
+%     % visualize each puncta by the color of the synapsin puncta to which it
+%     % was assigned
+%     fprintf('Overlay ');
+%     fsynapsinoverlay = struct('type', 'labeloverlay', 'label', assign);
+%     fsynapsinoverlay.cmap = synapsin_cmap;
+%     overlay = filtdat(ds, cname_th, fsynapsinoverlay);
+%     ds = addcolorchannel(ds, overlay, cname_assigned);
     
     % find watershed basin mask for maximum closest to synapsin centroid
-    fprintf('WaterMask ');
-    fwater = struct('type', 'watershedmask', 'center', synapsin_cent, ...
-        'markers', maxima);
-    [filt info] = filtdat(ds, cname, fwater);
+    fprintf('PunctaFilter ');
+    if(nnz(strcmp(ablistpre, cname))) % use pre or post synaptic search restriction mask?
+        restrict = synapsin_restrictpre;
+    else
+        restrict = synapsin_restrictpost;
+    end
+    ffilter = struct('type', 'assign', 'sourceRegions', labels, ...
+        'targetRegions', restrict);
+    assignlabels = filtdat(ds, cname_th, ffilter);
+    fmask = struct('type', 'mask', 'mask', assignlabels);
+    ds = addchannel(ds, filtdat(ds, cname_th, fmask), cname_ab);
+    
+%     maskpre = filtdat(ds, mask, fmaskpre);
+%     maskpost = filtdat(ds, mask, fmaskpost);
+%     fmaskpre = struct('type', 'mask', 'mask', maskpre);
+%     fmaskpost = struct('type', 'mask', 'mask', maskpost);
     
     % distance to maximum closest to synapsin centroid, used as feature
-    centdists(:, c) = distfn(info.centermarker, synapsin_cent);
+%     centdists(:, c) = distfn(info.centermarker, synapsin_cent);
     
-    fprintf('Restrict ');
-    if(nnz(strcmp(ablistpre, cname))) % use pre or post synaptic search restriction mask?
-         restricted = filtdat(ds, filt, fmaskpre);
-    else
-         restricted = filtdat(ds, filt, fmaskpost);
-    end
+%     fprintf('Restrict ');
+%     if(nnz(strcmp(ablistpre, cname))) % use pre or post synaptic search restriction mask?
+%          restricted = filtdat(ds, cname_th, fmaskpre);
+%     else
+%          restricted = filtdat(ds, cname_th, fmaskpost);
+%     end
+%     ds = addchannel(ds, restricted, cname_ab);
     
-    fprintf(' Mask');
-    fmask = struct('type', 'mask', 'mask', restricted);
-    masked = filtdat(ds, cname, fmask);
-    ds = addchannel(ds, masked, cname_ab);
+%     fprintf(' Mask');
+%     fmask = struct('type', 'mask', 'mask', restricted);
+%     masked = filtdat(ds, cname, fmask);
+%     ds = addchannel(ds, masked, cname_ab);
     fprintf('\n');
 end
 % 
@@ -137,7 +178,15 @@ end
 ds.vis = {};
 ds.visname = {};
 
-vis = { 'Synapsin', 'WaterSeg', 'Synapsin_puncta', 'VGlut1_puncta', 'VGlut2_puncta', 'PSD95_puncta', 'VGat_puncta', 'GAD_puncta', 'Gephyrin_puncta'};
+vis = { 'Synapsin', 'Synapsin_puncta', 'WaterSeg', 'Synapsin_premask', 'Synapsin_postmask', ...
+    'VGlut1_puncta', 'VGlut1_ab', ...
+    'VGlut2_puncta', 'VGlut2_ab', ...
+    'PSD95_puncta', 'PSD95_ab', ...
+    'VGat_puncta', 'VGat_ab', ...
+    'GAD_puncta', 'GAD_ab', ...
+    'Gephyrin_puncta', 'Gephyrin_ab'
+    };
+%     'VGat_puncta', 'GAD_puncta', 'Gephyrin_puncta'};
 
 %   'Bassoon', ...
 %     'VGlut1', {'Synapsin_maskpre','VGlut1_ab'}, ...
