@@ -14,14 +14,15 @@ features{1} = ft(ds.trainactive,:);
 labels{1} = ds.trainlabel(ds.trainactive);
 
 testname{2} = '2-Class Glut vs. None';
-% ft = getfeature(ds, {'Glut_L2pre', 'PSD95_iab'});
+ft = getfeature(ds, {'Glut_L2pre', 'PSD95_iab'});
 features{2} = ft(ds.trainactive,:);
-% labels{2} = (ds.trainlabel(ds.trainactive) == find(strcmp(ds.labelnames, 'glut1'))) | ...
-%             (ds.trainlabel(ds.trainactive) == find(strcmp(ds.labelnames, 'glut2')));
-labels{2} =  (ds.trainlabel(ds.trainactive) == find(strcmp(ds.labelnames, 'glut')));
+ labels{2} = (ds.trainlabel(ds.trainactive) == find(strcmp(ds.labelnames, 'glut1'))) | ...
+             (ds.trainlabel(ds.trainactive) == find(strcmp(ds.labelnames, 'glut2'))) | ...
+             (ds.trainlabel(ds.trainactive) == find(strcmp(ds.labelnames, 'glutBoth')));
+%labels{2} =  (ds.trainlabel(ds.trainactive) == find(strcmp(ds.labelnames, 'glut')));
 
 testname{3} = '2-Class GABA vs. None';
-% ft = getfeature(ds, {'GABA_L2pre', 'Gephyrin_iab'});
+ft = getfeature(ds, {'GABA_L2pre', 'Gephyrin_iab'});
 features{3} = ft(ds.trainactive,:);
 labels{3} = (ds.trainlabel(ds.trainactive) == find(strcmp(ds.labelnames, 'gaba')));
 
@@ -50,5 +51,5 @@ synplot(ds, feat,errors(:,3), {'gaba'});
 
 figure(2), clf;
 feat = {'Glut_L2pre', 'PSD95_iab'};
-% synplot(ds, feat, errors(:,2), {'glut1', 'glut2', 'glutBoth'});
-synplot(ds, feat, errors(:,2), {'glut'});
+synplot(ds, feat, errors(:,2), {'glut1', 'glut2', 'glutBoth'});
+% synplot(ds, feat, errors(:,2), {'glut'});

@@ -23,7 +23,7 @@ else
             error('Could not find class %s', twoclass{i});
         end
         if(i == 1)
-            catnames = twoclass{i};
+            catnames = strcat(twoclass{i},'');
         else
             catnames = strcat(catnames, ', ', twoclass{i});
         end
@@ -54,7 +54,7 @@ else
         'MarkerFaceColor', 'r', 'MarkerEdgeColor', 'r');
     h(2) = line(0, 0, 'Marker', 'o', 'MarkerSize', 8, 'LineStyle', 'none', ...
         'MarkerFaceColor', 'k', 'MarkerEdgeColor', 'k');
-    legend({catnames, 'Other'}, 'Location', 'Best');
+    legend({'In', 'Other'}, 'Location', 'Best');
 end
 
 delete(h);
