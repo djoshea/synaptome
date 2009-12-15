@@ -41,13 +41,14 @@ set(gcf, 'NumberTitle', 'off');
 set(gcf, 'defaulttextinterpreter', 'none');
 
 if(~dotwoclass)
+    h = zeros(size(ds.labelnames));
     for ci = 1:length(ds.labelnames)
-        h = zeros(size(ds.labelnames));
         h(ci) = line(0, 0, 'Marker', 'o', 'MarkerSize', 8, 'LineStyle', 'none', ...
             'MarkerFaceColor', ds.labelcolors(ci,:), ...
             'MarkerEdgeColor', ds.labelcolors(ci,:));
     end
     legend(ds.labelnames, 'Location', 'Best');
+    delete(h);
 else
     h = zeros(2,1);
     h(1) = line(0, 0, 'Marker', 'o', 'MarkerSize', 8, 'LineStyle', 'none', ...
@@ -55,9 +56,10 @@ else
     h(2) = line(0, 0, 'Marker', 'o', 'MarkerSize', 8, 'LineStyle', 'none', ...
         'MarkerFaceColor', 'k', 'MarkerEdgeColor', 'k');
     legend({catnames, 'Other'}, 'Location', 'Best');
+    delete(h);
 end
 
-delete(h);
+
 
 for i = 1:ds.ntrain
     if(~ds.trainactive(i))

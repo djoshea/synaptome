@@ -27,11 +27,12 @@ ds = addchannel(ds, filtdat(ds, 'Synapsin_th', fmaxwind3), 'Synapsin_mw3');
 fvormask = struct('type', 'vormask', 'biasfactor', 1);
 [vormask info] = filtdat(ds, 'Synapsin_mw3', fvormask);
 fvormask = struct('type', 'mask', 'mask', vormask);
+ds = addchannel(ds, vormask, 'Synapsin_vormask');
 
 % ball restriction mask around central synapsin puncta, further restricts
 % voronoi mask that avoids other synapsin puncta
 frestrictpre = struct('type', 'maskball', 'radius', 150, 'center', info.center);
-frestrictpost = struct('type', 'maskball', 'radius', 200, 'center', info.center);
+frestrictpost = struct('type', 'maskball', 'radius', 300, 'center', info.center);
 
 % Final masks for pre and post, ball restricted and voronoi restricted
 maskpre = filtdat(ds, vormask, frestrictpre);
@@ -56,8 +57,10 @@ ablistpre = {'Bassoon','VGlut1','VGlut2','VGat', 'GAD'};
 ablistpost = { 'PSD95', 'Gephyrin' };
 ablist = [ablistpre ablistpost];
 
+fprintf('Active Brightness: ');
 for c = 1:length(ablist)
     cname = ablist{c};
+    fprintf('%s ',cname);
     cname_th = sprintf('%s_th',cname);
     cname_ab = sprintf('%s_ab',cname);
     
@@ -71,6 +74,7 @@ for c = 1:length(ablist)
     fab.center = info.center;
     ds = addchannel(ds, filtdat(ds, cname_th, fab), cname_ab);
 end
+fprintf('\n');
 
 %% Specify synaptogram visualization structure
 % this involves creating a cell array with one element for each row
@@ -81,12 +85,12 @@ ds.visname = {};
 
 vis = { 'Synapsin', 'Synapsin_mw3', 'Synapsin_maskpre', 'Synapsin_maskpost', ...
        'Bassoon', ...
-    'VGlut1', {'Synapsin_maskpre','VGlut1_ab'}, ...
-    'VGlut2', {'Synapsin_maskpre', 'VGlut2_ab'}, ...
-    'PSD95', {'Synapsin_maskpost', '', 'PSD95_ab'}, ...
-    'VGat', {'Synapsin_maskpre','VGat_ab'}, ...
-    'GAD', {'Synapsin_maskpre', 'GAD_ab'}, ...
-    'Gephyrin', {'Synapsin_maskpost', '', 'Gephyrin_ab'}, ...
+    'VGlut1_th', {'Synapsin_maskpre','VGlut1_ab'}, ...
+    'VGlut2_th', {'Synapsin_maskpre', 'VGlut2_ab'}, ...
+    'PSD95_th', {'Synapsin_maskpost', '', 'PSD95_ab'}, ...
+    'VGat_th', {'Synapsin_maskpre','VGat_ab'}, ...
+    'GAD_th', {'Synapsin_maskpre', 'GAD_ab'}, ...
+    'Gephyrin_th', {'Synapsin_maskpost', '', 'Gephyrin_ab'}, ...
     };
 
 for i = 1:length(vis)
@@ -96,8 +100,8 @@ end
 ds.ft = [];
 ds.ftname = {};
 
-% integrated brightness features
-for c = 1:ds.nimch
+%% integrated brightness features
+for c = 1:ds.nch
    cname = ds.chlist{c};
    name = sprintf('%s_ib', cname);
    dat = zeros(ds.ntrain,1);
