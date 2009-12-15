@@ -1,13 +1,20 @@
 function syntable(ds, i)
-
 % data table figure with synapse features
-ti = sprintf('Data for Synapse %d [ %s ]', i, ds.sg(i).str);
+
+if(~isfield(ds.sg(i), 'str'))
+    str = ds.labelnames{ds.trainlabel(i)};
+else
+    str = ds.sg(i).str;
+end
+    
+
+ti = sprintf('Data for Synapse %d [ %s ]', i, str);
 
 figure(198); clf;
 % set(gcf, 'Position', [1661 476 350 400]);
 set(gcf, 'Name', ti);
 set(gcf, 'NumberTitle', 'off');
-
+set(gcf, 'Menu', 'none');
 t = uitable;
 set(t, 'Units', 'normalized')
 set(t, 'Position', [0.01 0.01 0.98 0.98]);

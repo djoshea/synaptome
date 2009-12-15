@@ -43,10 +43,10 @@ synapsin_dist = info.distcentermarker;
 
 % restrictpre/post is the region where pre and post centroids must lie to
 % be counted as mine
-waterpre = imdilate(watermask, strel('arbitrary', ones(2,2,2)));
-waterpost = imdilate(watermask, strel('arbitrary', ones(2,2,2)));
-synapsin_restrictpre = filtdat(ds, waterpre, struct('type', 'maskball', 'radius', 200, 'center', synapsin_cent));
-synapsin_restrictpost = filtdat(ds, waterpost, struct('type', 'maskball', 'radius', 300, 'center', synapsin_cent));
+waterpre = imdilate(watermask, strel('arbitrary', ones(1,1,1)));
+waterpost = imdilate(watermask, strel('arbitrary', ones(1,1,1)));
+synapsin_restrictpre = filtdat(ds, waterpre, struct('type', 'maskball', 'radius', 400, 'center', synapsin_cent));
+synapsin_restrictpost = filtdat(ds, waterpost, struct('type', 'maskball', 'radius', 500, 'center', synapsin_cent));
 ds = addchannel(ds, synapsin_restrictpre, 'Synapsin_premask');
 ds = addchannel(ds, synapsin_restrictpost, 'Synapsin_postmask');
 
@@ -103,8 +103,19 @@ for c = 1:length(ablist)
     cname_puncta = sprintf('%s_puncta', cname);
     cname_assigned = sprintf('%s_assign', cname);
     
+    if(nnz(strcmp(ablistpre,cname)))
+        pre = 1;
+    else
+        pre = 0;
+    end
+    
     fprintf('TopHat ');
-    ds = addchannel(ds, filtdat(ds, cname, ftophat), cname_th);
+    
+    if(pre)
+        ds = addchannel(ds, getchannel(ds, 'Synapsin') .* filtdat(ds, cname, ftophat), cname_th);
+    else
+        ds = addchannel(ds, filtdat(ds, cname, ftophat), cname_th);
+    end
 %     ds = addchannel(ds, getchannel(ds,cname), cname_th);
     
     % find all maxima using neighborhood maxima
@@ -122,18 +133,18 @@ for c = 1:length(ablist)
     
     % assign each cname puncta to the nearest synapsin puncta by the watershed
     % basin id of each cname puncta's weighted centroid location
-%     fprintf('PunctaAssign ');
-%     fassign = struct('type', 'assign', 'sourceRegions', labels, ...
-%         'targetRegions', synapsin_watermask);
-%     assign = filtdat(ds, cname_th, fassign);
-%     
-%     % visualize each puncta by the color of the synapsin puncta to which it
-%     % was assigned
-%     fprintf('Overlay ');
-%     fsynapsinoverlay = struct('type', 'labeloverlay', 'label', assign);
-%     fsynapsinoverlay.cmap = synapsin_cmap;
-%     overlay = filtdat(ds, cname_th, fsynapsinoverlay);
-%     ds = addcolorchannel(ds, overlay, cname_assigned);
+    fprintf('PunctaAssign ');
+    fassign = struct('type', 'assign', 'sourceRegions', labels, ...
+        'targetRegions', getchannel(ds, 'Synapsin_watermask'));
+    assign = filtdat(ds, cname_th, fassign);
+    
+    % visualize each puncta by the color of the synapsin puncta to which it
+    % was assigned
+    fprintf('Overlay ');
+    fsynapsinoverlay = struct('type', 'labeloverlay', 'label', assign);
+    fsynapsinoverlay.cmap = synapsin_cmap;
+    overlay = filtdat(ds, cname_th, fsynapsinoverlay);
+    ds = addcolorchannel(ds, overlay, cname_assigned);
     
     % find watershed basin mask for maximum closest to synapsin centroid
     fprintf('PunctaFilter ');
@@ -170,8 +181,8 @@ for c = 1:length(ablist)
 %     ds = addchannel(ds, masked, cname_ab);
     fprintf('\n');
 end
-% 
-% %% Specify synaptogram visualization structure
+
+%% Specify synaptogram visualization structure
 % % this involves creating a cell array with one element for each row
 % % each row consists of 1 or 3 channel names that index into ds.ch
 % % 1 name implies grayscale, 3 names are used as RGB channels
@@ -179,13 +190,22 @@ ds.vis = {};
 ds.visname = {};
 
 vis = { 'Synapsin', 'Synapsin_puncta', 'WaterSeg', 'Synapsin_premask', 'Synapsin_postmask', ...
-    'VGlut1_puncta', 'VGlut1_ab', ...
-    'VGlut2_puncta', 'VGlut2_ab', ...
-    'PSD95_puncta', 'PSD95_ab', ...
-    'VGat_puncta', 'VGat_ab', ...
-    'GAD_puncta', 'GAD_ab', ...
-    'Gephyrin_puncta', 'Gephyrin_ab'
+    'VGlut1_assign', 'VGlut1_ab', ...
+    'VGlut2_assign', 'VGlut2_ab', ...
+    'PSD95_assign', 'PSD95_ab', ...
+    'VGat_assign', 'VGat_ab', ...
+    'GAD_assign', 'GAD_ab', ...
+    'Gephyrin_assign', 'Gephyrin_ab'
     };
+
+% vis = { 'Synapsin', 'Synapsin_puncta', 'WaterSeg', 'Synapsin_premask', 'Synapsin_postmask', ...
+%     'VGlut1_puncta', 'VGlut1_ab', ...
+%     'VGlut2_puncta', 'VGlut2_ab', ...
+%     'PSD95_puncta', 'PSD95_ab', ...
+%     'VGat_puncta', 'VGat_ab', ...
+%     'GAD_puncta', 'GAD_ab', ...
+%     'Gephyrin_puncta', 'Gephyrin_ab'
+%     };
 %     'VGat_puncta', 'GAD_puncta', 'Gephyrin_puncta'};
 
 %   'Bassoon', ...
@@ -201,29 +221,30 @@ for i = 1:length(vis)
     ds = addvisrow(ds, vis{i});
 end
 
+%% Feature Computation
 ds.ft = [];
 ds.ftname = {};
 % 
-fprintf('Features: CentDist ');
+% fprintf('Features: CentDist ');
 % centroid distance features
-ds = addfeature(ds, synapsin_dist, 'Synapsin_dist');
-for c = 1:length(ablist)
-    ftname = sprintf('%s_dist', ablist{c});
-    ds = addfeature(ds, centdists(:,c), ftname);
-end
+% ds = addfeature(ds, synapsin_dist, 'Synapsin_dist');
+% for c = 1:length(ablist)
+%     ftname = sprintf('%s_dist', ablist{c});
+%     ds = addfeature(ds, centdists(:,c), ftname);
+% end
 
 % integrated brightness features
-% for c = 1:ds.nimch
-%    cname = ds.chlist{c};
-%    name = sprintf('%s_ib', cname);
-%    dat = zeros(ds.ntrain,1);
-%    for i = 1:ds.ntrain
-%        chdat = min(ds.sg(i).im(6,5:7,5:7,5:7), ds.sg(i).im(c,5:7,5:7,5:7));
-%        dat(i) = sum(chdat(:));
-%    end
-%    
-%    ds = addfeature(ds, dat, name);
-% end
+for c = 1:ds.nimch
+   cname = ds.chlist{c};
+   name = sprintf('%s_ib', cname);
+   dat = zeros(ds.ntrain,1);
+   for i = 1:ds.ntrain
+       chdat = min(ds.sg(i).im(6,5:7,5:7,5:7), ds.sg(i).im(c,5:7,5:7,5:7));
+       dat(i) = sum(chdat(:));
+   end
+   
+   ds = addfeature(ds, dat, name);
+end
 
 % active brightness features
 fprintf('IntActBright ');
