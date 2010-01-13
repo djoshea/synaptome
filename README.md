@@ -52,11 +52,9 @@ Setting Up the Path and the 'ds' Structure
 Most of the code lies in the root synaptome directory, whereas code specific
 to a particular dataset, such as a particular loading script or filtering
 script, is generally located in a directory used only for that dataset. For
-this reason, you should *add the synaptome directory and at least its filters
-subdirectory to your matlab path* and then operate out of the local dataset 
-directory. This can be performed automatically by running
-
-    initpath;
+this reason, you should *add the synaptome directory with subdirectories (or
+at least its filters subdirectory) to your matlab path* and then operate out 
+of the local dataset directory. 
 
 Synaptome makes heavy use of Matlab structures to store and organize data. IN
 particular, a variety of information related to a given dataset is stored
