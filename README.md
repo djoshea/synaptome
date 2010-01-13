@@ -109,9 +109,10 @@ orientation (i.e. Z addresses pages, Y addresses rows, X address columnds)
 
 ### Functions
 
-    chdat = getimchannel(ds, chname)
-	Returns data from a specific imaging channel by name for all synapses
-	chname is the name of the original imaging channel to search in chlist
+#### `chdat = getimchannel(ds, chname)`
+	
+        Returns data from a specific imaging channel by name for all synapses
+	chname is the name of the original imaging channel to search in chlist.
 
 Filtered and Color Annotated Channels
 -------------------------------------
@@ -140,64 +141,81 @@ detailed documentation within filtdat.m adjacent to each filter.
 ### Fields
 
     trd : number of data channels x ntrain x sgdim (5d array)
+
     trdlist : names of each data channel (same as first dimension of trd)
+
     colorch : number of color channels x ntrain x sgdim x 3 (6d array last is RGB)
+
     colorchname : names of color channels (same as first dimension of colorch)
 
 ### Functions
 
-    ds = addchannel(ds, dat, dname, normalize)
-    	Adds a filtered image channel to ds.trd with name dname.
-	dat should be ntrain x sgdim
-	normalize (boolean) indicates whether all data should be as a whole 
-	  linearly shifted to fit the [0, 1] range. defaults to 1.
+#### `ds = addchannel(ds, dat, dname, normalize)`
 
-    ds = addcolorchannel(ds, dat, dname)
-	Adds a color channel to ds.colorch with name dname. 
-	dat should be ntrain x sgdim x 3 and all values in [0, 1].
+Adds a filtered image channel to ds.trd with name dname.
 
-    [filt info] = filtdat(ds, dat, params)
-	Performs some kind of filtering or computational operation on some
-	  imaging data and returns the results and optionally some metadata.
-	  filtdat merely returns the filtered output and metadata, it is not 
-	  designed to make any changes directly to ds. This enables filters to be
-	  chained easily before adding the output to the trd list via addchannel.
-	  The filtered output may be easily added back to ds.trd via:
+	dat : ntrain x sgdim data to store as channel
 
-	    filtparams = struct('type', 'typename', 'option1', value1);
-	    ds = addchannel(ds, ...
-	      filtdat(ds, 'InputChannelName', filtparams), 'OutputChannelName');
+        dname : name string for new channel
 
-	dat is the primary input to the operation, specified either directly
-	  as an array ntrain x sgdim or by name (to be retrieved using
-	  getchannel)
-	params is a struct specifying the details of the operation to perform
-	  params.type specifies which operation to perform and must be 
-	  specified. Other values under params depend on the operation being
-	  performed. These values can include parameters used for all synapses
-	  globally, arrays of parameters used for individual synapses, or even
-	  entire additional imaging data arrays.
-	filt is the primary output of the operation as an array ntrain x sgdim
-	info is a structure containing metadata returned by some operations.
-	  These fields may contain arrays of values generated for each synapse
-	  individually or secondary output channel arrays.
+	normalize : boolean, indicates whether all data should be as a whole 
+	            linearly shifted to fit the [0, 1] range. defaults to 1.
 
-	Invidual filters are typically implemented as typename_filt.m files in
-  	  the filters directory (but may be placed anywhere on the matlab path).
-  	  They may also be implemented within the filtdat.m where indicated.
+#### `ds = addcolorchannel(ds, dat, dname)`
+
+Adds a color channel to ds.colorch with name dname. 
+
+	dat : ntrain x sgdim x 3 RGB color values, all values in range [0, 1].
+
+#### `[filt info] = filtdat(ds, dat, params)`
 	
-	 See the comments for each invidual filter function within filtdat.m for
-	 more specific documentation on usage.
+Performs some kind of filtering or computational operation on some
+imaging data and returns the results and optionally some metadata.
+filtdat merely returns the filtered output and metadata, it is not 
+designed to make any changes directly to ds. This enables filters to be
+chained easily before adding the output to the trd list via addchannel.
+The filtered output may be easily added back to ds.trd via:
 
-    ds = getchannel(ds, dname, syn)
-	Retrieves data for a particular channel for all or a particular
-	  synapse. Searches trdlist first (filtered channels), then original
-	  imaging channels (using getimchannel), and then colorchannels. Error
-	  if channel still not found.
-	dname is the name of the channel for which to search.
-	syn is an optional id number in the interval [1 ds.ntrain]. If used,
-	  the returned data will be for the specified synapse only, instead of
-  	  an array for all synapses.
+        filtparams = struct('type', 'typename', 'option1', value1);
+	ds = addchannel(ds, filtdat(ds, 'InputChannelName', filtparams), ...
+                'OutputChannelName');
+
+Individual filters are typically implemented as typename_filt.m files in
+the filters directory (but may be placed anywhere on the matlab path).
+They may also be implemented within the filtdat.m where indicated.
+	
+See the comments for each invidual filter function within filtdat.m for
+more specific documentation on usage.
+
+	dat : the primary input to the operation, specified either directly
+	      as an array ntrain x sgdim or by name (to be retrieved using
+	      getchannel
+
+	params : a struct specifying the details of the operation to perform
+	         params.type specifies which operation to perform and must be 
+	         specified. Other values under params depend on the operation being
+	         performed. These values can include parameters used for all synapses
+	         globally, arrays of parameters used for individual synapses, or even
+	         entire additional imaging data arrays.
+
+	filt : the primary output of the operation as an array ntrain x sgdim
+
+	info : a structure containing metadata returned by some operations.
+	       These fields may contain arrays of values generated for each synapse
+	       individually or secondary output channel arrays.
+
+#### `ds = getchannel(ds, dname, syn)`
+
+Retrieves data for a particular channel for all or a particular
+synapse. Searches trdlist first (filtered channels), then original
+imaging channels (using getimchannel), and then colorchannels. Error
+if channel still not found.
+
+	dname : name of the channel for which to search.
+
+	syn : optional id number in the interval [1 ds.ntrain]. If used,
+	      the returned data will be for the specified synapse only, instead of
+  	      an array for all synapses.
 
 Visualization
 -------------
@@ -225,44 +243,58 @@ to add each row. For example, to view Synapsin in row 1 as grayscale, VGlut1 as 
 ### Fields
 
     vis : array of channel names (or arrays of 3 channel names for RGB composites)
-  used for each row of the synaptogram visualization
+          used for each row of the synaptogram visualization
+
     visname : array of names printed next to each row of the synaptogram.
-    typically these are automatically filled out when addvisrow() is used.
+              Typically these are automatically filled out when addvisrow() is used.
 
 ### Functions
 
-    ds = addvisrow(ds, visdat, name)
-	Used to add a row to the ds.vis list.
-	visdat is either the name of a channel (filtered or color annotation)
+#### `ds = addvisrow(ds, visdat, name)`
+
+Used to add a row to the ds.vis list.
+	
+        visdat is either the name of a channel (filtered or color annotation)
 	  or an array of 3 channel names. If one of the colors is not
 	  specified (i.e. array of length 2) or is given by '', the color will
 	  be set to 0 in the compositing.
+
 	name is an optional string used to override the default name printed
 	  next to each row on the synaptogram. The default is the original
 	  name or each of the channel names joined by ' / ' in between.
 
-    syntable(ds, i)
-	Displays a data table containing the value of each feature for a
-	  particular synapse, typically evoked within viewsg to be displayed
-	  alongside the synaptogram
-	i is a synapse index in the interval [1 ds.ntrain]
+#### `syntable(ds, i)`
 
-    viewsg(ds, i, fignum)
-	Displays the synaptogram for synapse i in figure(fignum). This is the
-	method called from a synplot's on click callback function to bringup
-	the synaptogram for the clicked point. Uses ds.vis and ds.visname to
-	build up the synaptogram image row by row using viewsgrow and then to
-	display the full synaptogram on a dark background with text labels to
-	either side.
+Displays a data table containing the value of each feature for a
+particular synapse, typically evoked within viewsg to be displayed
+alongside the synaptogram.
 
-    rowdat = viewsgrow(dat, bordercol, vspacing, hspacing)
-	dat is either a 3d intensity array in [z y x] coords, or dat is a
-	  struct where dat.R, dat.G, dat.B are 3d intensity arrays in [z y x]
-	  coords (for RGB color)
-	bordercol is a RGB value used to fill the margins around each XY tile
-	vspacing is padding above and below each tile
-	hspacing is padding left of each tile and to the right of the last
-	  tile
+	i : synapse index in the interval [1 ds.ntrain]
+
+#### `viewsg(ds, i, fignum)`
+
+Displays the synaptogram for synapse i in figure(fignum). This is the
+method called from a synplot's on click callback function to bringup
+the synaptogram for the clicked point. Uses ds.vis and ds.visname to
+build up the synaptogram image row by row using viewsgrow and then to
+display the full synaptogram on a dark background with text labels to
+either side.
+
+        i : synapse index in the interval [1 ds.ntrain]
+
+        fignum : number of figure to display in. default is gcf.
+
+#### `rowdat = viewsgrow(dat, bordercol, vspacing, hspacing)`
+	
+       dat : either a 3d intensity array in [z y x] coords, or a
+	     struct where dat.R, dat.G, dat.B are 3d intensity arrays in [z y x]
+	     coords (for RGB color)
+
+	bordercol : 3x1 RGB value used to fill the margins around each XY tile
+
+	vspacing : padding above and below each tile
+
+	hspacing : padding left of each tile and to the right of the last tile
 
 Supervised Learning
 -------------------
@@ -290,19 +322,29 @@ set and evaluating it's training and cross-validation error.
 ### Fields
 
     classes : names for each class
+
     labelnames : names for each label
+
     labelcolors: RGB values used to represent each label
+
     ntrain : number of synapses in training set
+
     votes : full voting table by classes (synapses x classes x voters)
+
     nvotes : number of voters
+
     votesbylabel : voting table by labels (synapses x labels x voters)
+
     trainlabel : actual label id assigned to each synapse (indexes labelnames)
+
     trainlabelrunnerup : label id with the second most votes
+
     trainlabelconf : confidence measure determined by (votes to winner - votes to
-      runner up) / nvotes
+                     runner up) / nvotes
+
     trainactive : boolean indicator of whether to include this synapse in
-      supervised learning training and testing, typically this is a thresholded
-      version of trainlabelconf to take only examples upon which humans agree
+                  supervised learning training and testing, typically this is a thresholded
+                  version of trainlabelconf to take only examples upon which humans agree
 
 Feature Computation
 -------------------
@@ -317,23 +359,32 @@ synapses.
 
 ### Fields
 
-    ft : ntrain x number of features, rowwise matrix of feature vecotrs
+    ft : ntrain x number of features, rowwise matrix of feature vectors
+
     ftname : list of feature names
 
 ### Functions
 
-    ds = addfeature(ds, ftdat, name)
-	Adds a new feature to ds, where ftdat is an array of scalar values for
- 	  that feature column for each of the ntrain synapses, and name is a
-	  unique string used to refer to that feature.
+#### `ds = addfeature(ds, ftdat, name)`
 
-    [ftmat idx] = getfeature(ds, names);
-	Retrieves a vector or matrix of values for each synapse for one or
-	  more features by name.
-	names is either a string or an array of strings
-	ftmat is either a vector or matrix of feature values for all synapses
-	idx is the column index into the feature matrix (ds.ft) at which each
-	  named feature was found
+Adds a new feature columnn to ds
+
+        ftdat : array of scalar values for the feature column for each
+                of the ntrain synapses
+
+        name : unique string used to refer to that feature
+
+#### `[ftmat idx] = getfeature(ds, names)`
+
+Retrieves a vector or matrix of values for each synapse for one or
+more features by name.
+
+	names : either a string or an array of strings
+
+	ftmat : either a vector or matrix of feature values for all synapses
+
+	idx : column index into the feature matrix (ds.ft) at which each
+	      named feature was found
 
 Feature Scatter Plots
 ---------------------
@@ -349,13 +400,17 @@ will load a synaptogram visualization for that particular synapse.
 
 ### Functions
 
-    synplot(ds, features, errors, twoclass)
-	Displays the interactive scatter plot of feature values
-	features is an array of strings representing feature names to be used
-	  for the X and Y axes. 
-	errors is a binary vector indicating which synapses to mark with an X, 
+#### `synplot(ds, features, errors, twoclass)`
+
+Displays the interactive scatter plot of feature values
+features is an array of strings representing feature names to be used
+for the X and Y axes. 
+	
+        errors : binary vector indicating which synapses to mark with an X, 
 	  defaulting to zeros(ds.ntrain,1)
-	twoclass is an array of label names used when the scatter plot should 
-	  color synapses according to only 2 categories, those whose label is 
-	  in twoclass (as red) and all others (as black)
+
+	twoclass : array of label names used when the scatter plot should 
+	           color synapses according to only 2 categories, those whose label is 
+	           in twoclass (as red) and all others (as black)
+
 
