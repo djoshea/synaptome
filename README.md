@@ -97,22 +97,28 @@ orientation (i.e. Z addresses pages, Y addresses rows, X address columnds)
 
 ### Fields
 
-    dsname : name of dataset or imaging sesssion
+    dsname : name of dataset or imaging session
+
     chlist : names of original imaging channels present in the dataset
+
     nimch : number of original imaging channels
-    sgdim : [Z Y X] dimensions of synaptogram.
+
+    sgdim : [Z Y X] dimensions of synaptogram
+
     sgaspect: [Z Y X] aspect ratio of each image voxel
+
     sg : struct with individual synapse structures beneath
+
     	sg.im : image channel data (4d: nimch x sgdim)
-	sg.str : label string for this synapse (coordinates, class label,
-	  etc.)
+
+	sg.str : descriptive string for this synapse (coordinatess, label, etc.)
 
 ### Functions
 
 #### `chdat = getimchannel(ds, chname)`
 	
-        Returns data from a specific imaging channel by name for all synapses
-	chname is the name of the original imaging channel to search in chlist.
+Returns data from a specific imaging channel by name for all synapses
+chname is the name of the original imaging channel to search in chlist.
 
 Filtered and Color Annotated Channels
 -------------------------------------
@@ -400,7 +406,7 @@ will load a synaptogram visualization for that particular synapse.
 
 ### Functions
 
-#### `synplot(ds, features, errors, twoclass)`
+#### <tt>synplot(ds, features, errors, twoclass)</tt>
 
 Displays the interactive scatter plot of feature values
 features is an array of strings representing feature names to be used
