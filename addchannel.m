@@ -1,6 +1,6 @@
 function ds = addchannel(ds, dat, dname, normalize)
 % Adds a channel to the ds.trdat array
-% dat should be an array: ntrain x 11 x 11 x 11
+% dat should be an array: ntrain x sgdim (4d array)
 % normalize (default on) will shift linearly into [0,1] range
 
 if(~exist('normalize', 'var'))

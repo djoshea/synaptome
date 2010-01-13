@@ -14,7 +14,7 @@ for i = 1:length(ds.chlist)
 end
 
 % top hat filter synapsin
-ftophat = struct('type', 'tophat', 'se', strel('disk',1));
+ftophat = struct('type', 'tophat', 'se', strel('disk',2));
 ds = addchannel(ds, filtdat(ds, 'Synapsin', ftophat), 'Synapsin_th');
 
 % then find maxima in 5x5x5 neighborhoods
@@ -26,12 +26,14 @@ ds = addchannel(ds, filtdat(ds, 'Synapsin', fmaxwind3), 'Synapsin_mw3');
 % this mask avoids other synapsin puncta
 fvormask = struct('type', 'vormask', 'biasfactor', 1);
 [vormask info] = filtdat(ds, 'Synapsin_mw3', fvormask);
+synapsin_cent = info.center;
+synapsin_dist = info.distcenter;
 fvormask = struct('type', 'mask', 'mask', vormask);
 
 % ball restriction mask around central synapsin puncta, further restricts
 % voronoi mask that avoids other synapsin puncta
-frestrictpre = struct('type', 'maskball', 'radius', 150, 'center', info.center);
-frestrictpost = struct('type', 'maskball', 'radius', 200, 'center', info.center);
+frestrictpre = struct('type', 'maskball', 'radius', 250, 'center', info.center);
+frestrictpost = struct('type', 'maskball', 'radius', 400, 'center', info.center);
 
 % Final masks for pre and post, ball restricted and voronoi restricted
 maskpre = filtdat(ds, vormask, frestrictpre);
@@ -46,7 +48,7 @@ ds = addchannel(ds, filtdat(ds, 'Synapsin', fmaskpost), 'Synapsin_maskpost');
 % global max for brightest puncta find
 fmax = struct('type', 'globalmax');
 % small ball around global max to pass only active brightness zone
-fab = struct('type', 'maskball', 'radius', 100);
+fab = struct('type', 'maskball', 'radius', 200);
 
 % active brightness filtering: 
 % search for brightest point (fmask) within masked region (fmaskpre or fmaskpost)
@@ -56,6 +58,12 @@ ablistpre = {'Bassoon','VGlut1','VGlut2','VGat', 'GAD'};
 ablistpost = { 'PSD95', 'Gephyrin' };
 ablist = [ablistpre ablistpost];
 
+centdists = zeros(ds.ntrain, length(ablist));
+distfn = @(zyx,center) sqrt(((zyx(:,1)-center(:,1))*ds.sgaspect(1)).^2 + ...
+                          ((zyx(:,2)-center(:,2))*ds.sgaspect(2)).^2 + ...
+                          ((zyx(:,3)-center(:,3))*ds.sgaspect(3)).^2 );
+syncenter = ds.sgdim/2 + 1/2; 
+                    
 for c = 1:length(ablist)
     cname = ablist{c};
     cname_th = sprintf('%s_th',cname);
@@ -69,7 +77,15 @@ for c = 1:length(ablist)
     end
     [filt info] = filtdat(ds, restricted, fmax);
     fab.center = info.center;
-    ds = addchannel(ds, filtdat(ds, cname_th, fab), cname_ab);
+    
+    centdists(:, c) = distfn(info.center, synapsin_cent);
+    
+    % now here's the question: do we compute integrated active brightness
+    % within the original restriction mask and within a small ball around
+    % the local max (use restricted as the input)
+    % or ignore the original restriction mask (use cname_th as the input)?
+     ds = addchannel(ds, filtdat(ds, cname_th, fab), cname_ab);
+%    ds = addchannel(ds, filtdat(ds, restricted, fab), cname_ab);
 end
 
 %% Specify synaptogram visualization structure
@@ -96,18 +112,25 @@ end
 ds.ft = [];
 ds.ftname = {};
 
-% integrated brightness features
-for c = 1:ds.nimch
-   cname = ds.chlist{c};
-   name = sprintf('%s_ib', cname);
-   dat = zeros(ds.ntrain,1);
-   for i = 1:ds.ntrain
-       chdat = min(ds.sg(i).im(6,5:7,5:7,5:7), ds.sg(i).im(c,5:7,5:7,5:7));
-       dat(i) = sum(chdat(:));
-   end
-   
-   ds = addfeature(ds, dat, name);
+% centroid distance features
+ds = addfeature(ds, synapsin_dist_center, 'Synapsin_dist');
+for c = 1:length(ablist)
+    ftname = sprintf('%s_dist', ablist{c});
+    ds = addfeature(ds, centdists(:,c), ftname);
 end
+
+% integrated brightness features
+% for c = 1:ds.nimch
+%    cname = ds.chlist{c};
+%    name = sprintf('%s_ib', cname);
+%    dat = zeros(ds.ntrain,1);
+%    for i = 1:ds.ntrain
+%        chdat = min(ds.sg(i).im(6,5:7,5:7,5:7), ds.sg(i).im(c,5:7,5:7,5:7));
+%        dat(i) = sum(chdat(:));
+%    end
+%    
+%    ds = addfeature(ds, dat, name);
+% end
 
 % active brightness features
 for c = 1:length(ablist)
@@ -131,6 +154,7 @@ gabadat = gabadat ./ repmat(max(gabadat,[],1),[ds.ntrain 1]);
 
 ds = addfeature(ds, sqrt(sum(glutdat(:,2:3).^2,2)), 'Glut_L2pre');
 ds = addfeature(ds, sqrt(sum(gabadat(:,2:3).^2,2)), 'GABA_L2pre');
+
 
 ds = addfeature(ds, min([glutdat(:,1) sqrt(sum(glutdat(:,2:3).^2,2))], [], 2), 'Glut_L2prepost');
 ds = addfeature(ds, min([gabadat(:,1) sqrt(sum(gabadat(:,2:3).^2,2))], [], 2), 'GABA_L2prepost');

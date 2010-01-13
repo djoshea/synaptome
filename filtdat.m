@@ -19,6 +19,9 @@ else
     orig = dat;
 end
 
+% find the corresponding .m file in filters directory
+
+
 % ordering is due to mask(z, y, x) indexing
 [Y Z X] = meshgrid(1:ds.sgdim(1), 1:ds.sgdim(2), 1:ds.sgdim(3));
 distmask = @(center) sqrt(((Z-center(1))*ds.sgaspect(1)).^2 + ...

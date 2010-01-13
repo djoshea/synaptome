@@ -55,7 +55,7 @@ for i = 1:ds.ntrain
     end
 end
 
-% adjustments to votes
+% after the fact adjustments to votes based on viewing the synaptograms
 ds.trainlabel(168) = 4;
 ds.trainlabel(81) = 4;
 ds.trainlabel(68) = 3;
@@ -63,7 +63,6 @@ ds.trainlabel(71) = 3;
 ds.trainlabel(62) = 2;
 ds.trainlabel(120) = 5;
 ds.trainlabel(28) = 1;
-
 
 disp('Loading Training Synaptogram Data...');
 sgdir = 'U:\Brad\KDM 090416b\Decision tree experiment\puncta';
@@ -75,7 +74,7 @@ chlistabbrev = {'01syn', '02bas', '03vglut1', '04vglut2', '05psd', ...
 for i = 1:ds.ntrain
     disp(sprintf('    Synaptogram %4d', i));
     sg = [];
-    sg.im = zeros(ds.nimch, ds.sgdim(3), ds.sgdim(2), ds.sgdim(1)); % ch, z, y, x
+    sg.im = zeros([ds.nimch ds.sgdim]); % ch, z, y, x
     sg.str = ds.labelnames{ds.trainlabel(i)};
 
     for c = 1:ds.nimch

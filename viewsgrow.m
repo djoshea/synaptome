@@ -1,5 +1,10 @@
 function rowdat = viewsgrow(dat, bordercol, vspacing, hspacing)
-% dat given in (z,y,x) coords, or specify dat.R .G .B separately
+% Builds a row of a synaptogram by horizontally concatenating successive
+% slices of a 3D image stack, including room for a margin whose color is
+% border col [R G B] and size is vspacing on top and bottom and hspacing
+% left, right, and in between.
+% 
+% dat given in [z y x] coords, or specify dat.R .G .B separately in zyx
 
 if(ndims(dat) == 4) 
     d.R = dat(:,:,:,1);

@@ -1,4 +1,23 @@
 function synplot(ds, features, errors, twoclass)
+% SYNPLOT(ds, features, errors, twoclass)
+% 
+% Displays a 2D scatter plot where each where each synapse is
+% represented as a dot colored according to its human provided trainlabel. The
+% two axes are specified by named features within ds.ft. 3D plots are
+% not implemented but should be trivial if the need arises. Optionally, synapses
+% which were misclassified by the most recently trained supervised learning
+% classifier may be marked with an X. Clicking on a synapse dot in this plot
+% will load a synaptogram visualization for that particular synapse. Only
+% synapses marked with ds.trainactive(i) == 1 will be plotted.
+% 
+% features is an array of strings representing feature names to be used for
+%   the X and Y axes. 
+% errors is a binary vector indicating which synapses to
+%   mark with an X, defaulting to zeros(ds.ntrain,1)
+% twoclass is an array of label names used when the scatter plot should color synapses according to
+%   only 2 categories, those whose label is in twoclass (as red) and all
+%   others (as black)
+
 
 if(~exist('features', 'var'))
     features = {'IB_VGlut1', 'IB_PSD95'};
@@ -7,7 +26,8 @@ if(~exist('errors', 'var'))
     errors = zeros(ds.ntrain,1);
 else
     if(size(errors,1) ~= ds.ntrain)
-        errors = zeros(ds.ntrain,1);
+        %errors = zeros(ds.ntrain,1);
+        error('errors array should have length ds.ntrain');
     end
 end
 if(~exist('twoclass', 'var'))

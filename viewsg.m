@@ -1,5 +1,5 @@
 function viewsg(ds, i, fignum)
-% VIEWSG(ds, i, fignum) - View the ith synaptogram in Figure fignums
+% VIEWSG(ds, i, fignum) - View the ith synaptogram in Figure fignum
 
 bgcol = [0.14 0.14 0.14];
 
