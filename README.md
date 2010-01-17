@@ -115,7 +115,7 @@ orientation (i.e. Z addresses pages, Y addresses rows, X address columnds)
 
 ### Functions
 
-#### `chdat = getimchannel(ds, chname)`
+#### <tt>chdat = getimchannel(ds, chname)</tt>
 	
 Returns data from a specific imaging channel by name for all synapses
 chname is the name of the original imaging channel to search in chlist.
@@ -156,7 +156,7 @@ detailed documentation within filtdat.m adjacent to each filter.
 
 ### Functions
 
-#### `ds = addchannel(ds, dat, dname, normalize)`
+#### <tt>ds = addchannel(ds, dat, dname, normalize)</tt>
 
 Adds a filtered image channel to ds.trd with name dname.
 
@@ -167,13 +167,13 @@ Adds a filtered image channel to ds.trd with name dname.
 	normalize : boolean, indicates whether all data should be as a whole 
 	            linearly shifted to fit the [0, 1] range. defaults to 1.
 
-#### `ds = addcolorchannel(ds, dat, dname)`
+#### <tt>ds = addcolorchannel(ds, dat, dname)</tt>
 
 Adds a color channel to ds.colorch with name dname. 
 
 	dat : ntrain x sgdim x 3 RGB color values, all values in range [0, 1].
 
-#### `[filt info] = filtdat(ds, dat, params)`
+#### <tt>[filt info] = filtdat(ds, dat, params)</tt>
 	
 Performs some kind of filtering or computational operation on some
 imaging data and returns the results and optionally some metadata.
@@ -190,7 +190,7 @@ Individual filters are typically implemented as typename_filt.m files in
 the filters directory (but may be placed anywhere on the matlab path).
 They may also be implemented within the filtdat.m where indicated.
 	
-See the comments for each invidual filter function within filtdat.m for
+See the comments for each individual filter function within filtdat.m for
 more specific documentation on usage.
 
 	dat : the primary input to the operation, specified either directly
@@ -210,7 +210,7 @@ more specific documentation on usage.
 	       These fields may contain arrays of values generated for each synapse
 	       individually or secondary output channel arrays.
 
-#### `ds = getchannel(ds, dname, syn)`
+#### <tt>ds = getchannel(ds, dname, syn)</tt>
 
 Retrieves data for a particular channel for all or a particular
 synapse. Searches trdlist first (filtered channels), then original
@@ -238,7 +238,9 @@ to 3 channel names which will be merged as RGB to make a color composite row on
 the fly. Channels which are already color annotated may only be used by
 themselves and not included in an RGB composite row. Typically visualizations 
 are constructed by clearing the ds.vis and ds.visname lists and using addvisrow
-to add each row. For example, to view Synapsin in row 1 as grayscale, VGlut1 as red and VGlut2 as blue in row 2, and a color annotation channel Synapsin_puncta in row 3, use:
+to add each row. For example, to view Synapsin in row 1 as grayscale, VGlut1 as 
+red and VGlut2 as blue in row 2, and a color annotation channel Synapsin_puncta 
+in row 3, use:
 
     ds.vis = {};
     ds.visname = {};
@@ -256,7 +258,7 @@ to add each row. For example, to view Synapsin in row 1 as grayscale, VGlut1 as 
 
 ### Functions
 
-#### `ds = addvisrow(ds, visdat, name)`
+#### <tt>ds = addvisrow(ds, visdat, name)</tt>
 
 Used to add a row to the ds.vis list.
 	
@@ -269,7 +271,7 @@ Used to add a row to the ds.vis list.
 	  next to each row on the synaptogram. The default is the original
 	  name or each of the channel names joined by ' / ' in between.
 
-#### `syntable(ds, i)`
+#### <tt>syntable(ds, i)</tt>
 
 Displays a data table containing the value of each feature for a
 particular synapse, typically evoked within viewsg to be displayed
@@ -277,7 +279,7 @@ alongside the synaptogram.
 
 	i : synapse index in the interval [1 ds.ntrain]
 
-#### `viewsg(ds, i, fignum)`
+#### <tt>viewsg(ds, i, fignum)</tt>
 
 Displays the synaptogram for synapse i in figure(fignum). This is the
 method called from a synplot's on click callback function to bringup
@@ -290,11 +292,11 @@ either side.
 
         fignum : number of figure to display in. default is gcf.
 
-#### `rowdat = viewsgrow(dat, bordercol, vspacing, hspacing)`
+#### <tt>rowdat = viewsgrow(dat, bordercol, vspacing, hspacing)</tt>
 	
-       dat : either a 3d intensity array in [z y x] coords, or a
-	     struct where dat.R, dat.G, dat.B are 3d intensity arrays in [z y x]
-	     coords (for RGB color)
+        dat : either a 3d intensity array in [z y x] coords, or a
+	      struct where dat.R, dat.G, dat.B are 3d intensity arrays in [z y x]
+	      coords (for RGB color)
 
 	bordercol : 3x1 RGB value used to fill the margins around each XY tile
 
@@ -371,7 +373,7 @@ synapses.
 
 ### Functions
 
-#### `ds = addfeature(ds, ftdat, name)`
+#### <tt>ds = addfeature(ds, ftdat, name)</tt>
 
 Adds a new feature columnn to ds
 
@@ -380,7 +382,7 @@ Adds a new feature columnn to ds
 
         name : unique string used to refer to that feature
 
-#### `[ftmat idx] = getfeature(ds, names)`
+#### <tt>[ftmat idx] = getfeature(ds, names)</tt>
 
 Retrieves a vector or matrix of values for each synapse for one or
 more features by name.
@@ -413,7 +415,7 @@ features is an array of strings representing feature names to be used
 for the X and Y axes. 
 	
         errors : binary vector indicating which synapses to mark with an X, 
-	  defaulting to zeros(ds.ntrain,1)
+	         defaulting to zeros(ds.ntrain,1)
 
 	twoclass : array of label names used when the scatter plot should 
 	           color synapses according to only 2 categories, those whose label is 
