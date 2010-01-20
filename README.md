@@ -97,21 +97,23 @@ orientation (i.e. Z addresses pages, Y addresses rows, X address columnds)
 
 ### Fields
 
-    dsname : name of dataset or imaging session
+<b><tt>dsname</tt></b> : name of dataset or imaging session
 
-    chlist : names of original imaging channels present in the dataset
+<b><tt>chlist</tt></b> : names of original imaging channels present in the dataset
 
-    nimch : number of original imaging channels
+<b><tt>nimch</tt></b> : number of original imaging channels
 
-    sgdim : [Z Y X] dimensions of synaptogram
+<b><tt>sgdim</tt></b> : [Z Y X] dimensions of synaptogram
 
-    sgaspect: [Z Y X] aspect ratio of each image voxel
+<b><tt>sgaspect</tt></b>: [Z Y X] aspect ratio of each image voxel
 
-    sg : struct with individual synapse structures beneath
+<b><tt>sg</tt></b> : struct with individual synapse structures beneath
 
-    	sg.im : image channel data (4d: nimch x sgdim)
+<blockquote>
+<b><tt>sg.im</tt></b> : image channel data (4d: nimch x sgdim)
 
-	sg.str : descriptive string for this synapse (coordinatess, label, etc.)
+<b><tt>sg.str</tt></b> : descriptive string for this synapse (coordinatess, label, etc.)
+</blockquote>
 
 ### Functions
 
