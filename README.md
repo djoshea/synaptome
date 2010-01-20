@@ -170,8 +170,7 @@ Adds a filtered image channel to ds.trd with name dname.
 
 <tt>dname</tt> : name string for new channel
 
-<tt>normalize</tt> : boolean, indicates whether all data should be as a whole 
-	            linearly shifted to fit the [0, 1] range. defaults to 1.
+<tt>normalize</tt> : boolean, indicates whether all data should be as a whole linearly shifted to fit the [0, 1] range. defaults to 1.
 
 #### <tt>ds = addcolorchannel(ds, dat, dname)</tt>
 
@@ -189,7 +188,7 @@ chained easily before adding the output to the trd list via addchannel.
 The filtered output may be easily added back to ds.trd via:
 
         filtparams = struct('type', 'typename', 'option1', value1);
-	ds = addchannel(ds, filtdat(ds, 'InputChannelName', filtparams), ...
+        ds = addchannel(ds, filtdat(ds, 'InputChannelName', filtparams), ...
                 'OutputChannelName');
 
 Individual filters are typically implemented as typename_filt.m files in
@@ -256,10 +255,10 @@ in row 3, use:
 ### Fields
 
 <b><tt>vis</tt></b> : array of channel names (or arrays of 3 channel names for RGB composites)
-          used for each row of the synaptogram visualization
+used for each row of the synaptogram visualization
 
 <b><tt>visname</tt></b> : array of names printed next to each row of the synaptogram.
-              Typically these are automatically filled out when addvisrow() is used.
+Typically these are automatically filled out when addvisrow() is used.
 
 ### Functions
 
@@ -358,6 +357,13 @@ winner - votes to runner up) / nvotes
 <b><tt>trainactive</tt></b> : boolean indicator of whether to include this synapse in
 supervised learning training and testing, typically this is a thresholded
 version of trainlabelconf to take only examples upon which humans agree
+
+### Functions
+
+#### <tt>testft</tt>
+
+Sample script for performing cross-validation error tests using a simple linear classifier.
+
 
 Feature Computation
 -------------------
