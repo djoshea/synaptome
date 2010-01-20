@@ -115,6 +115,10 @@ orientation (i.e. Z addresses pages, Y addresses rows, X address columnds)
 
 <b><tt>sg.str</tt></b> : descriptive string for this synapse (coordinatess, label, etc.)
 
+<b><tt>sg.im</tt></b> : image channel data (4d: nimch x sgdim)
+
+<b><tt>sg.str</tt></b> : descriptive string for this synapse (coordinatess, label, etc.)
+
 ### Functions
 
 #### <tt>chdat = getimchannel(ds, chname)</tt>
